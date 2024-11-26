@@ -1,0 +1,86 @@
+/* Chat Sidebar Container */
+.chat-sidebar {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Title */
+.chat-sidebar-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+/* Chat List */
+.chat-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.chat-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.chat-list-item:hover {
+  background-color: #f1f1f1;
+}
+
+/* Avatar */
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
+}
+
+/* Chat Info */
+.chat-info {
+  flex-grow: 1;
+}
+
+.chat-name {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
+.chat-last-message {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chat-sidebar {
+    padding: 10px;
+  }
+
+  .chat-avatar {
+    width: 35px;
+    height: 35px;
+  }
+
+  .chat-name {
+    font-size: 0.9rem;
+  }
+
+  .chat-last-message {
+    font-size: 0.8rem;
+  }
+}

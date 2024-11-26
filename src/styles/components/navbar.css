@@ -1,0 +1,139 @@
+/* Navbar Container */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgb(2, 89, 2);
+  color: white;
+  padding: 10px 20px;
+  height: 60px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Logo Section */
+.navbar-logo img {
+  height: 40px; /* Adjust based on your logo's design */
+  width: auto;
+  cursor: pointer;
+}
+
+/* Search Bar */
+.navbar-search {
+  flex-grow: 1;
+  margin: 0 20px;
+}
+
+.navbar-search input {
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 20px;
+  outline: none;
+  font-size: 1rem;
+}
+
+/* NEW SEARCH BAR  */
+.search-bar {
+  position: relative;
+  flex: 1;
+  margin: 0 1rem;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  color: black;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.search-result-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+
+.search-result-item:hover {
+  background-color: #f9f9f9;
+}
+
+.no-results {
+  padding: 0.5rem;
+  color: #888;
+  text-align: center;
+}
+
+/* Icons Section */
+.navbar-icons {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.icon {
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.icon:hover {
+  color: #d4edda;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar-search {
+    display: none; /* Hide search bar on smaller screens */
+  }
+
+  .navbar-icons {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-logo h1 {
+    font-size: 1.2rem;
+  }
+
+  .icon {
+    font-size: 1.2rem;
+  }
+}
+.notification-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  font-size: 1.5rem;
+}
+
+.logout-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  font-size: 1.5rem;
+}

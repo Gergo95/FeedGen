@@ -1,0 +1,78 @@
+/* Post Creator Container */
+.post-creator {
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+/* Textarea for Post Content */
+.post-input {
+  width: 100%;
+  height: 80px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 1rem;
+  resize: none;
+  outline: none;
+}
+
+.post-input::placeholder {
+  color: #aaa;
+}
+
+/* Post Actions (Image Upload + Submit Button) */
+.post-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.image-upload-label {
+  background-color: #28a745; /* Primary Green */
+  color: white;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.image-upload-label:hover {
+  background-color: #218838; /* Slightly darker green */
+}
+
+.image-upload-label input {
+  display: none; /* Hide the actual file input */
+}
+
+.post-submit-button {
+  background-color: #007bff; /* Primary Blue */
+  color: white;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.post-submit-button:hover {
+  background-color: #0056b3; /* Slightly darker blue */
+}
+
+/* Image Preview Section */
+.post-preview {
+  margin-top: 10px;
+}
+
+.image-preview {
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 8px;
+  margin-top: 5px;
+}

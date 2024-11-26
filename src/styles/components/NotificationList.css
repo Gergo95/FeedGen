@@ -1,0 +1,107 @@
+/* Notification Container */
+.notification-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Notification Icon */
+.notification-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  position: relative;
+}
+
+.badge {
+  background-color: #ff0000;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
+/* Notification List */
+.notification-list {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  z-index: 1000;
+  padding: 10px;
+}
+
+.notification-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.notification-item {
+  padding: 10px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.notification-item:hover {
+  background-color: #e9f5ec;
+}
+
+.notification-item.read {
+  opacity: 0.7;
+}
+
+.notification-title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
+.notification-time {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 5px 0 0;
+}
+
+.no-notifications {
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .notification-list {
+    width: 100%;
+    top: 50px;
+  }
+}
+
+.view-all-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: #28a745; /* Green background */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.3s ease;
+}
+
+.view-all-button:hover {
+  background-color: #218838; /* Darker green on hover */
+}

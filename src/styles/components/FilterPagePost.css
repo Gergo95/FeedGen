@@ -1,0 +1,80 @@
+/* FilterPagePost.css */
+
+/* Main container for filtering and posts */
+.filter-container {
+  display: flex;
+  flex-direction: column; /* Arrange posts vertically */
+  gap: 1rem; /* Add spacing between posts */
+  width: 100%; /* Ensure the container spans the full width */
+  margin: 0 auto; /* Center the container if there's extra space */
+  padding: 1rem; /* Add some padding */
+  box-sizing: border-box;
+}
+
+/* Material UI dropdown container styling */
+.MuiFormControl-root {
+  width: 300px;
+}
+
+/* Styling the posts list grid */
+.posts-list {
+  display: flex;
+  flex-direction: column; /* Arrange posts vertically */
+  gap: 1rem; /* Add spacing between posts */
+  width: 100%; /* Ensure the container spans the full width */
+  margin: 0 auto; /* Center the container if there's extra space */
+  padding: 1rem; /* Add some padding */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+/* Individual Post Card Styling */
+.post-card {
+  display: block; /* Each post takes up the full width */
+  width: 100%; /* Ensures the post spans the container */
+  padding: 1rem;
+  background-color: #fff; /* Set a background for better visibility */
+  border: 1px solid #ddd; /* Add a subtle border */
+  border-radius: 8px; /* Round the corners slightly */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a shadow for depth */
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.post-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.post-card h3 {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.post-card p {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+  height: 60px; /* Limiting text height */
+  overflow: hidden;
+}
+
+.post-card a {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: bold;
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.post-card a:hover {
+  color: #0056b3;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .MuiFormControl-root {
+    width: 80%;
+  }
+}

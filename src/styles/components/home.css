@@ -1,0 +1,123 @@
+.home-container {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 100vh;
+}
+
+.left-section,
+.right-section {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.left-section {
+  background: linear-gradient(to right, var(--main-color), #a8e063);
+  color: var(--secondary-color);
+  text-align: center;
+}
+
+.branding .logo {
+  max-width: 100px;
+  margin-bottom: 1rem;
+}
+
+.app-name {
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+.features {
+  margin-top: 2rem;
+}
+
+.features-title {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.features-list {
+  list-style: none;
+  padding: 0;
+}
+
+.features-list li {
+  font-size: 1.2rem;
+  margin: 0.5rem 0;
+}
+
+.right-section {
+  background: var(--secondary-color);
+  box-shadow: var(--shadow);
+  border-radius: var(--border-radius);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-box {
+  max-width: 400px;
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.8rem;
+  margin: 0.5rem 0;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+}
+
+.login-button {
+  width: 100%;
+  padding: 0.8rem;
+  background-color: var(--main-color);
+  border: none;
+  color: var(--secondary-color);
+  font-size: 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background 0.3s;
+}
+
+.login-button:hover {
+  background-color: #27ae60;
+}
+
+.signup-text {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.signup-text a {
+  color: var(--main-color);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.signup-text a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .home-container {
+    flex-direction: column;
+  }
+
+  .left-section,
+  .right-section {
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .features-list li {
+    font-size: 1rem;
+  }
+}

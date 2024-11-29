@@ -32,7 +32,7 @@ function Events() {
 
   useEffect(() => {
     if (eventId) {
-      fetchEventByEventId(eventId); // Fetch group when component mounts or groupId changes
+      fetchEventByEventId(eventId); // Fetch event when component mounts or eventId changes
     }
   }, [eventId, fetchEventByEventId]);
 
@@ -57,7 +57,7 @@ function Events() {
     try {
       await joinEvent(currentUser.uid, eventId, events.going);
       alert("You have successfully joined the event!");
-      // Re-fetch group data and membership status
+      // Re-fetch event data and membership status
       //I do this so that after someone joins, the page refreshes itself
       await fetchEventByEventId(eventId);
     } catch (error) {
@@ -77,7 +77,7 @@ function Events() {
       alert("You have successfully left the event!");
       events.going = events.going - 1;
 
-      // Re-fetch group data or update local state
+      // Re-fetch event data or update local state
       await fetchEventByEventId(eventId);
     } catch (error) {
       console.error("Failed to leave event:", error);
@@ -88,129 +88,89 @@ function Events() {
   return (
     <>
       <Navbar />
-      <div className="group-container">
-        {/* Group Header */}
-        <div className="group-header">
-          <div className="group-banner"></div>
-          <div className="group-info">
+      <div className="event-container">
+        {/* Event Header */}
+        <div className="event-header">
+          <div className="event-banner">
             <img
               src={events?.photoURL}
               alt="Event Picture"
               className="event-avatar"
             />
+          </div>
+          <div className="event-info">
             <h2>{events.name}</h2>
-            <p>Event · {events.going} coming</p>
-            {isGoing ? (
+            <p>{events.going} Going</p>
+            {events.creatorId == currentUser.uid ? (
+              <button className="edit-btn" onClick={handleLeaveButton}>
+                Edit Event
+              </button>
+            ) : isGoing ? (
               <button className="leave-btn" onClick={handleLeaveButton}>
-                Leave
+                Leave Event
               </button>
             ) : (
               <button className="action-btn" onClick={handleJoinButton}>
-                Going
+                Join Event
               </button>
             )}
           </div>
         </div>
 
-        {/* Group Content */}
+        {/* Event Content */}
+        <div className="event-content">
+          <aside className="event-sidebar">
+            <div className="about-section">
+              <h3>About</h3>
+              <p>{events.description}</p>
+              <p>{events.date}</p>
+            </div>
+            <div className="stats-section">
+              <div className="stat-item">
+                <strong>{events.going}</strong>
+                <span>Going</span>
+              </div>
+              <div className="stat-item">
+                <strong>45</strong>
+                <span>Posts Today</span>
+              </div>
+            </div>
+            <div className="members-section">
+              <h3>Members Going</h3>
+              <div className="member">
+                <img
+                  src="https://via.placeholder.com/50"
+                  alt="Member 1"
+                  className="member-pic"
+                />
+                <p>Jane Smith</p>
+              </div>
+              <div className="member">
+                <img
+                  src="https://via.placeholder.com/50"
+                  alt="Member 2"
+                  className="member-pic"
+                />
+                <p>John Doe</p>
+              </div>
+              <a href="#" className="view-more">
+                View All Members
+              </a>
+            </div>
+          </aside>
 
-        {eventCreator ? (
-          <button className="edit-btn">Edit Event</button>
-        ) : isGoing ? (
-          <div className="group-content">
-            <div>
-              {/* Sidebar */}
-              <aside className="group-sidebar">
-                <div className="about-section">
-                  <h3>About</h3>
-                  <p>{events.description}</p>
-                </div>
-                <div className="stats-section">
-                  <div className="stat-item">
-                    <strong>{events.going}</strong>
-                    <span>Going</span>
-                  </div>
-                  <div className="stat-item">
-                    <strong>45</strong>
-                    <span>Posts Today</span>
-                  </div>
-                </div>
-                <div className="members-section">
-                  <h3>Going</h3>
-                  <div className="member">
-                    <img
-                      src="https://via.placeholder.com/50"
-                      alt="Member 1"
-                      className="member-pic"
-                    />
-                    <p>Jane Smith</p>
-                  </div>
-                  <div className="member">
-                    <img
-                      src="https://via.placeholder.com/50"
-                      alt="Member 2"
-                      className="member-pic"
-                    />
-                    <p>John Doe</p>
-                  </div>
-                  <a href="#" className="view-more">
-                    View All Members
-                  </a>
-                </div>
-              </aside>
-              {/* Main Section */}
-              <section className="group-main-section">
+          <section className="event-main-section">
+            {isGoing ? (
+              <>
                 <PostCreator />
                 <h3>Posts</h3>
                 <PostList posts={posts} />
-              </section>
-            </div>
-          </div>
-        ) : (
-          <div>
-            {/* Sidebar */}
-            <aside className="group-sidebar">
-              <div className="about-section">
-                <h3>About</h3>
-                <p>{events.description}</p>
-              </div>
-              <div className="stats-section">
-                <div className="stat-item">
-                  <strong>{events.going}</strong>
-                  <span>Going</span>
-                </div>
-                <div className="stat-item">
-                  <strong>45</strong>
-                  <span>Posts Today</span>
-                </div>
-              </div>
-              <div className="members-section">
-                <h3>Going</h3>
-                <div className="member">
-                  <img
-                    src="https://via.placeholder.com/50"
-                    alt="Member 1"
-                    className="member-pic"
-                  />
-                  <p>Jane Smith</p>
-                </div>
-                <div className="member">
-                  <img
-                    src="https://via.placeholder.com/50"
-                    alt="Member 2"
-                    className="member-pic"
-                  />
-                  <p>John Doe</p>
-                </div>
-                <a href="#" className="view-more">
-                  View All Members
-                </a>
-              </div>
-            </aside>
-            {/* Main Section */}
-            <h3>You have to join the Event to participate</h3>
-          </div>
-        )}
+              </>
+            ) : (
+              <h3>You have to join the Event to participate</h3>
+            )}
+          </section>
+        </div>
       </div>
     </>
   );

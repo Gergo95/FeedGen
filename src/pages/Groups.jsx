@@ -91,13 +91,12 @@ function Groups() {
       <Navbar />
       <div className="group-container">
         {/* Group Header */}
-
         <div className="group-header">
           <div className="group-banner"></div>
           <div className="group-info">
             <img
               src={groups?.photoURL}
-              alt="CsoportKép"
+              alt="Group Avatar"
               className="group-avatar"
             />
             <h2>{groups.name}</h2>
@@ -119,63 +118,7 @@ function Groups() {
           {groupCreator ? (
             <button className="edit-btn">Edit Group</button>
           ) : isMember ? (
-            <>
-              {/* Group Content */}
-              <div className="group-content">
-                {/* Sidebar */}
-                <aside className="group-sidebar">
-                  <div className="about-section">
-                    <h3>About</h3>
-                    <p>{groups.description}</p>
-                  </div>
-                  <div className="stats-section">
-                    <div className="stat-item">
-                      <strong>{groups.members}</strong>
-                      <span>Members</span>
-                    </div>
-                    <div className="stat-item">
-                      <strong>45</strong>
-                      <span>Posts Today</span>
-                    </div>
-                  </div>
-                  <div className="members-section">
-                    <h3>Members</h3>
-                    <div className="member">
-                      <img
-                        src="https://via.placeholder.com/50"
-                        alt="Member 1"
-                        className="member-pic"
-                      />
-                      <p>Jane Smith</p>
-                    </div>
-                    <div className="member">
-                      <img
-                        src="https://via.placeholder.com/50"
-                        alt="Member 2"
-                        className="member-pic"
-                      />
-                      <p>John Doe</p>
-                    </div>
-                    <a href="#" className="view-more">
-                      View All Members
-                    </a>
-                  </div>
-                </aside>
-
-                {/* Main Section */}
-                <section className="group-main-section">
-                  <PostCreator />
-                  <h3>Posts</h3>
-                  <PostList posts={posts} />
-                </section>
-              </div>
-            </>
-          ) : (
-            <div>
-              {/* Sidebar */}
-              <div>
-                <h3>You have to Join the Group to be able to participate</h3>
-              </div>
+            <div className="group-content">
               <aside className="group-sidebar">
                 <div className="about-section">
                   <h3>About</h3>
@@ -212,6 +155,32 @@ function Groups() {
                   <a href="#" className="view-more">
                     View All Members
                   </a>
+                </div>
+              </aside>
+
+              <section className="group-main-section">
+                <PostCreator />
+                <h3>Posts</h3>
+                <PostList posts={posts} />
+              </section>
+            </div>
+          ) : (
+            <div className="group-content">
+              <h3>You need to join the group to participate</h3>
+              <aside className="group-sidebar">
+                <div className="about-section">
+                  <h3>About</h3>
+                  <p>{groups.description}</p>
+                </div>
+                <div className="stats-section">
+                  <div className="stat-item">
+                    <strong>{groups.members}</strong>
+                    <span>Members</span>
+                  </div>
+                  <div className="stat-item">
+                    <strong>45</strong>
+                    <span>Posts Today</span>
+                  </div>
                 </div>
               </aside>
             </div>

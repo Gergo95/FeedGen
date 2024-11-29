@@ -2,20 +2,19 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import { auth, db } from "../firebase/firebaseConfig";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   const logout = async () => {
     try {
       await signOut(auth);
       setCurrentUser(null);
-      navigate("/home");
+      return <Navigate to="/home" replace />;
     } catch (err) {
       console.error(err);
     }

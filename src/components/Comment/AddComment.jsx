@@ -1,14 +1,23 @@
 import React, { useState } from "react";
 import "../../styles/components/AddComment.css";
+import { useAuth } from "../../context/AuthContext";
+import { useComments } from "../../context/CommentContext";
 
-const AddComment = ({ onAddComment }) => {
+const AddComment = ({ postId, onAddComment }) => {
   const [commentText, setCommentText] = useState("");
+  const { currentUser } = useAuth(); // Get the currently logged-in user
+  const { createCommentToPost } = useComments();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (commentText.trim()) {
-      onAddComment(commentText);
-      setCommentText("");
+    if (!commentText.trim()) return;
+
+    try {
+      await createCommentToPost(postId, currentUser.uid, commentText);
+      setCommentText(""); // Clear the textarea
+      if (onAddComment) onAddComment(); // Optional: Notify parent to refresh comments
+    } catch (error) {
+      console.error("Failed to add comment:", error);
     }
   };
 

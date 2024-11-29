@@ -10,53 +10,8 @@ import Navbar from "../components/Navbar";
 import GroupsPages from "../components/LeftSidebar/GroupsPages";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-
-const posts = [
-  {
-    id: "123",
-    title: "Sample Post Title",
-    content: "This is a sample post content for demonstration purposes.",
-    imageUrl: "https://via.placeholder.com/400",
-    likes: 5,
-    comments: [
-      { author: "John Doe", text: "Great post!" },
-      { author: "Jane Smith", text: "I totally agree!" },
-    ],
-  },
-  {
-    id: "232",
-    title: "Valami mas",
-    content: "ThValaksdaskdaoskdantent for demonstration purposes.",
-    imageUrl: "https://via.placeholder.com/400",
-    likes: 5,
-    comments: [
-      { author: "Geris", text: "LOOOOOL!" },
-      { author: "Petra", text: "I totally agree!" },
-    ],
-  },
-  {
-    id: "23s",
-    title: "Valami mas",
-    content: "ThValaksdaskdaoskdantent for demonstration purposes.",
-    imageUrl: "https://via.placeholder.com/400",
-    likes: 5,
-    comments: [
-      { author: "Geris", text: "LOOOOOL!" },
-      { author: "Petra", text: "I totally agree!" },
-    ],
-  },
-  {
-    id: "2322",
-    title: "Valami mas",
-    content: "ThValaksdaskdaoskdantent for demonstration purposes.",
-    imageUrl: "https://via.placeholder.com/400",
-    likes: 5,
-    comments: [
-      { author: "Geris", text: "LOOOOOL!" },
-      { author: "Petra", text: "I totally agree!" },
-    ],
-  },
-];
+import { ChatProvider, useChat } from "../context/ChatContext";
+import ChatWindow from "../components/Chat/ChatWindow";
 
 const groups = [
   { id: 1, name: "React Developers" },
@@ -73,60 +28,35 @@ const events = [
   { id: 2, name: "Marathon 2024" },
 ];
 
-const contacts = [
-  {
-    id: 1,
-    name: "Alice Johnson",
-    avatar: "https://via.placeholder.com/40",
-    lastMessage: "See you soon!",
-  },
-  {
-    id: 2,
-    name: "Bob Smith",
-    avatar: "https://via.placeholder.com/40",
-    lastMessage: "Got it!",
-  },
-  {
-    id: 3,
-    name: "Charlie Brown",
-    avatar: "https://via.placeholder.com/40",
-    lastMessage: "",
-  },
-  {
-    id: 4,
-    name: "Charlie Brown",
-    avatar: "https://via.placeholder.com/40",
-    lastMessage: "",
-  },
-  {
-    id: 5,
-    name: "Charlie Brown",
-    avatar: "https://via.placeholder.com/40",
-    lastMessage: "",
-  },
-  {
-    id: 6,
-    name: "Charlie Brown",
-    avatar: "https://via.placeholder.com/40",
-    lastMessage: "",
-  },
-  {
-    id: 7,
-    name: "Charlie Brown",
-    avatar: "https://via.placeholder.com/40",
-    lastMessage: "",
-  },
-];
-
 function FeedPage() {
   const [selectedChat, setSelectedChat] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
   const { currentUser } = useAuth(); //we get the current user.
   const navigate = useNavigate();
+  const [openChats, setOpenChats] = useState([]); // Make sure this is initialized as an empty array
+  const [posts, setPosts] = useState([]);
 
-  const handleSelectChat = (contact) => {
+  /* const handleSelectChat = (contact) => {
     setSelectedChat(contact);
     console.log("Selected Chat:", contact);
+  };
+ */
+  const handleOpenChat = (friend) => {
+    // Check if the chat is already open, if not, add it to the openChats
+    console.log("Opening chat with friend:", friend); // Log the friend data when you try to open the chat
+
+    if (!openChats.some((chat) => chat.uid === friend.uid)) {
+      console.log("Adding new chat to openChats array:", friend);
+
+      setOpenChats([...openChats, friend]);
+    } else {
+      console.log("Chat already open for:", friend.uid);
+    }
+  };
+
+  // Function to handle closing the chat window
+  const closeChat = (friendId) => {
+    setOpenChats(openChats.filter((chat) => chat.uid !== friendId));
   };
 
   const [filter, setFilter] = useState("all");
@@ -169,13 +99,24 @@ function FeedPage() {
 
         {/* Right Column: Chat */}
         <div className="feed-column right-column">
-          <ChatSidebar contacts={contacts} onSelectChat={handleSelectChat} />
-          {selectedChat && (
-            <div>
-              <h2>Chat with {selectedChat.name}</h2>
-              {/* Replace with your chat window component */}
+          <ChatProvider>
+            <div style={{ display: "flex", height: "100vh" }}>
+              {/* Chat Sidebar */}
+              <ChatSidebar
+                currentUser={currentUser}
+                openChat={handleOpenChat} // Pass function to open chat
+              />
             </div>
-          )}
+            {/* Pop-Up Chat Windows */}
+            {openChats?.map((chat) => (
+              <ChatWindow
+                key={chat.uid}
+                friend={chat}
+                currentUser={currentUser}
+                closeChat={() => closeChat(chat.uid)}
+              />
+            ))}
+          </ChatProvider>
         </div>
       </div>
     </>

@@ -98,7 +98,7 @@ const ListEvents = () => {
                 />
                 <h2>{event.name}</h2>
                 <p>{event.description}</p>
-                <p>Date: {event.date}</p>
+                <p> {event.date}</p>
               </div>
             </Link>
           </div>

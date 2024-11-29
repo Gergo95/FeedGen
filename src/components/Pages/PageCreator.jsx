@@ -4,6 +4,7 @@ import { usePages } from "../../context/PagesContext";
 import { storage } from "../../firebase/firebaseConfig";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import "../../styles/components/PageCreator.css";
+import { toast } from "react-toastify";
 
 const PageCreator = () => {
   const { currentUser } = useAuth();
@@ -46,13 +47,17 @@ const PageCreator = () => {
       };
 
       await createPage(pageData);
-      alert("Page created successfully!");
+      toast.success("Page created Successfully!!", {
+        position: "top-center",
+      });
+      setLoading;
       setPageName("");
       setAbout("");
       setProfilePicture(null);
     } catch (error) {
-      console.error("Error creating page:", error);
-      alert("Failed to create page. Please try again.");
+      toast.error(error.message, {
+        position: "bottom-center",
+      });
     }
 
     setLoading(false);

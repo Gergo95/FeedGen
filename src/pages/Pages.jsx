@@ -102,7 +102,7 @@ function Pages() {
     <>
       <Navbar />
       <div className="page-container">
-        {/* Group Header */}
+        {/* Page Header */}
         <div className="page-header">
           <div className="page-banner"></div>
           <div className="page-info">
@@ -118,64 +118,66 @@ function Pages() {
                 Unfollow Page
               </button>
             ) : (
-              <button className="action-btn " onClick={handleFollowButton}>
+              <button className="action-btn" onClick={handleFollowButton}>
                 Follow Page
               </button>
             )}
           </div>
         </div>
 
+        {/* Page Action Bar */}
         <div className="page-action-bar">
           {pageCreator && <button className="edit-btn">Edit Page</button>}
-          {/* Group Content */}
-          <div className="page-content">
-            {/* Sidebar */}
-            <aside className="page-sidebar">
-              <div className="about-section">
-                <h3>About</h3>
-                <p>{pages.about}</p>
-              </div>
-              <div className="stats-section">
-                <div className="stat-item">
-                  <strong>{pages.followers}</strong>
-                  <span>Followers</span>
-                </div>
-                <div className="stat-item">
-                  <strong>45</strong>
-                  <span>Posts Today</span>
-                </div>
-              </div>
-              <div className="members-section">
-                <h3>Members</h3>
-                <div className="member">
-                  <img
-                    src="https://via.placeholder.com/50"
-                    alt="Member 1"
-                    className="member-pic"
-                  />
-                  <p>Jane Smith</p>
-                </div>
-                <div className="member">
-                  <img
-                    src="https://via.placeholder.com/50"
-                    alt="Member 2"
-                    className="member-pic"
-                  />
-                  <p>John Doe</p>
-                </div>
-                <a href="#" className="view-more">
-                  View All Members
-                </a>
-              </div>
-            </aside>
+        </div>
 
-            {/* Main Section */}
-            <section className="page-main-section">
-              {pageCreator && <PagePostCreator />}
-              <h3>Posts</h3>
-              <PostList posts={posts} />
-            </section>
-          </div>
+        {/* Page Content */}
+        <div className="page-content">
+          {/* Sidebar */}
+          <aside className="page-sidebar">
+            <div className="about-section">
+              <h3>About</h3>
+              <p>{pages.about}</p>
+            </div>
+            <div className="stats-section">
+              <div className="stat-item">
+                <strong>{pages.followers}</strong>
+                <span>Followers</span>
+              </div>
+              <div className="stat-item">
+                <strong>45</strong>
+                <span>Posts Today</span>
+              </div>
+            </div>
+            <div className="members-section">
+              <h3>Members</h3>
+              <div className="member">
+                <img
+                  src="https://via.placeholder.com/50"
+                  alt="Member 1"
+                  className="member-pic"
+                />
+                <p>Jane Smith</p>
+              </div>
+              <div className="member">
+                <img
+                  src="https://via.placeholder.com/50"
+                  alt="Member 2"
+                  className="member-pic"
+                />
+                <p>John Doe</p>
+              </div>
+              <a href="#" className="view-more">
+                View All Members
+              </a>
+            </div>
+          </aside>
+
+          {/* Main Section */}
+          <section className="page-main-section">
+            {pageCreator && <PagePostCreator />}
+            <h3>Posts</h3>
+            <PostList posts={posts} />
+          </section>
         </div>
       </div>
     </>

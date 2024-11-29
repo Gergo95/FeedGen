@@ -111,7 +111,7 @@ const PageProvider = ({ children }) => {
       // Update the group document
       await updateDoc(pageRef, {
         followersId: updatedFollowersId,
-        followers: updatedFollowersId.length,
+        followers: followers - 1,
       });
 
       console.log("User successfully unfollowed the page.");

@@ -10,6 +10,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { createContext } from "react";
+import { useAuth } from "../context/AuthContext";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -17,6 +18,7 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const singInWithGoogle = async (e) => {
     e.preventDefault();
@@ -38,6 +40,7 @@ function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      console.log("Login successful : " + currentUser.uid);
       navigate("/feed"); // Redirect to the feed page after successful login
     } catch (err) {
       setError("Failed to login. Please check your email and password.");

@@ -1,80 +1,239 @@
-/* FilterPagePost.css */
-
 /* Main container for filtering and posts */
 .filter-container {
   display: flex;
-  flex-direction: column; /* Arrange posts vertically */
-  gap: 1rem; /* Add spacing between posts */
-  width: 100%; /* Ensure the container spans the full width */
-  margin: 0 auto; /* Center the container if there's extra space */
-  padding: 1rem; /* Add some padding */
+  flex-direction: column;
+  gap: 1.5rem; /* Increased spacing between posts */
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
   box-sizing: border-box;
+  max-width: 900px; /* Restrict maximum width for better readability */
 }
 
 /* Material UI dropdown container styling */
 .MuiFormControl-root {
-  width: 300px;
+  width: 100%;
+  max-width: 400px; /* Limit the width on larger screens */
 }
 
-/* Styling the posts list grid */
+/* Posts List */
 .posts-list {
   display: flex;
-  flex-direction: column; /* Arrange posts vertically */
-  gap: 1rem; /* Add spacing between posts */
-  width: 100%; /* Ensure the container spans the full width */
-  margin: 0 auto; /* Center the container if there's extra space */
-  padding: 1rem; /* Add some padding */
-  box-sizing: border-box; /* Include padding in width calculation */
+  flex-direction: column;
+  gap: 25px; /* Increased gap for a less crowded layout */
+  margin-top: 20px;
 }
 
-/* Individual Post Card Styling */
+/* Individual Post Card */
 .post-card {
-  display: block; /* Each post takes up the full width */
-  width: 100%; /* Ensures the post spans the container */
-  padding: 1rem;
-  background-color: #fff; /* Set a background for better visibility */
-  border: 1px solid #ddd; /* Add a subtle border */
-  border-radius: 8px; /* Round the corners slightly */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a shadow for depth */
-  transition: transform 0.2s, box-shadow 0.2s;
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid #ddd;
 }
 
 .post-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-12px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .post-card h3 {
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  transition: color 0.3s ease;
+}
+
+.post-card h3:hover {
+  color: #28a745; /* Change color on hover */
 }
 
 .post-card p {
-  font-size: 14px;
+  font-size: 1rem;
   color: #555;
-  line-height: 1.5;
-  height: 60px; /* Limiting text height */
+  line-height: 1.6;
+  max-height: 90px; /* More generous text space */
   overflow: hidden;
 }
 
 .post-card a {
   display: inline-block;
-  margin-top: 10px;
+  margin-top: 12px;
   font-weight: bold;
   color: #007bff;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color 0.3s ease, transform 0.3s ease;
 }
 
 .post-card a:hover {
   color: #0056b3;
+  transform: translateX(5px); /* Subtle movement on hover */
 }
 
-/* Mobile responsiveness */
+/* Post Header */
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #777;
+  margin-bottom: 15px;
+}
+
+.post-header .post-date {
+  font-style: italic;
+}
+
+.post-header .post-page {
+  font-weight: 600;
+  color: #333;
+}
+
+/* Post Title */
+.post-title {
+  font-size: 1.6rem;
+  margin: 15px 0;
+  color: #333;
+  font-weight: bold;
+}
+
+/* Post Content */
+.post-content {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+/* Post Image */
+.post-image {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-top: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Post Actions */
+.post-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.like-button,
+.comment-button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.like-button:hover,
+.comment-button:hover {
+  background-color: #45a049;
+  transform: translateY(-3px); /* Smooth lift effect */
+}
+
+.like-button:focus,
+.comment-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.3);
+}
+
+/* Empty State (No Posts) */
+.no-posts-message {
+  text-align: center;
+  font-size: 1.3rem;
+  color: #888;
+  font-style: italic;
+}
+
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
+  .filter-container {
+    padding: 1rem;
+  }
+
   .MuiFormControl-root {
-    width: 80%;
+    width: 90%;
+  }
+
+  .post-card {
+    padding: 20px;
+  }
+
+  .post-card h3 {
+    font-size: 1.3rem;
+  }
+
+  .post-content {
+    font-size: 1rem;
+  }
+
+  .post-image {
+    max-height: 300px;
+  }
+
+  .like-button,
+  .comment-button {
+    padding: 10px 20px;
+    font-size: 0.9rem;
   }
 }
+
+/* .posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+ */
+/*  Individual Post Card Styling 
+.post-card {
+   display: block; /* Each post takes up the full width 
+  width: 100%; /* Ensures the post spans the container 
+  padding: 1rem;
+  background-color: #fff; /* Set a background for better visibility 
+  border: 1px solid #ddd; /* Add a subtle border 
+  border-radius: 8px; /* Round the corners slightly 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a shadow for depth 
+  transition: transform 0.2s, box-shadow 0.2s; 
+} */
+
+/* .add-comment {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.submit-comment {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.submit-comment:hover {
+  background-color: #0056b3;
+} */

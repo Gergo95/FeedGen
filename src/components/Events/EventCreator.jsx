@@ -4,6 +4,7 @@ import { useEvents } from "../../context/EventsContext";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage, db } from "../../firebase/firebaseConfig";
 import "../../styles/components/EventCreator.css";
+import { toast } from "react-toastify";
 
 const EventCreator = () => {
   const { currentUser } = useAuth();
@@ -47,14 +48,17 @@ const EventCreator = () => {
         going: [currentUser.uid].length,
       });
 
-      alert("Event created successfully!");
+      toast.success("Event created Successfully!!", {
+        position: "top-center",
+      });
       setName("");
       setDescription("");
       setDate("");
       setImage(null);
     } catch (error) {
-      console.error("Error creating event:", error);
-      alert("Failed to create event. Please try again.");
+      toast.error(error.message, {
+        position: "bottom-center",
+      });
     } finally {
       setUploading(false);
     }

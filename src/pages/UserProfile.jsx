@@ -5,6 +5,7 @@ import { auth, db } from "../firebase/firebaseConfig";
 import { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   doc,
   getDoc,
@@ -18,12 +19,7 @@ import {
 import { usePosts } from "../context/PostContext";
 import PostList from "../components/Post/PostList";
 import ListMyPosts from "../components/Post/ListMyPosts";
-
-/*
-
-In the UserProfile component, use the useParams hook to extract
- the userId from the URL and fetch the user’s data from Firestore.
-*/
+import UserProfileEditor from "../components/UserProfile/UserProfileEditor";
 
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState("about");
@@ -34,8 +30,10 @@ const UserProfile = () => {
   const [isFriend, setIsFriend] = useState(false);
   const [friends, setFriends] = useState([]);
   const [userById, setUserById] = useState([]);
-
+  const navigate = useNavigate();
   const { posts, fetchUserData } = usePosts();
+  const [friendRequestSent, setFriendRequestSent] = useState(false);
+  const [friendRequestReceived, setFriendRequestReceived] = useState(false);
 
   useEffect(() => {
     // Fetch user data after login
@@ -48,19 +46,12 @@ const UserProfile = () => {
     fetchData();
   }, [uid]); // Run once when component mounts
 
-  if (!currentUser) {
-    return <p className="spinner">Loading...</p>;
-  }
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
-
-  const fetchFriendshipStatus = async () => {
-    try {
+  useEffect(() => {
+    const checkFriendshipStatus = async () => {
       const friendshipsRef = collection(db, "Friendships");
+      const friendRequestsRef = collection(db, "FriendRequests");
 
-      // Query to check if they are friends
+      // Check if they are already friends
       const q1 = query(
         friendshipsRef,
         where("user1", "==", currentUser.uid),
@@ -71,15 +62,102 @@ const UserProfile = () => {
         where("user1", "==", uid),
         where("user2", "==", currentUser.uid)
       );
-
       const [result1, result2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-      setIsFriend(!result1.empty || !result2.empty); // True if any document exists
-    } catch (error) {
-      console.error("Error checking friendship status:", error);
-    } finally {
+      if (!result1.empty || !result2.empty) {
+        setIsFriend(true);
+        setLoading(false);
+        return;
+      }
+
+      // Check if a friend request has been sent
+      const q3 = query(
+        friendRequestsRef,
+        where("sender", "==", currentUser.uid),
+        where("receiver", "==", uid)
+      );
+      const q4 = query(
+        friendRequestsRef,
+        where("sender", "==", uid),
+        where("receiver", "==", currentUser.uid)
+      );
+      const [sentRequests, receivedRequests] = await Promise.all([
+        getDocs(q3),
+        getDocs(q4),
+      ]);
+      setFriendRequestSent(!sentRequests.empty);
+      setFriendRequestReceived(!receivedRequests.empty);
       setLoading(false);
+    };
+
+    checkFriendshipStatus();
+  }, [uid, currentUser]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
+  const handleSendFriendRequest = async () => {
+    try {
+      const friendRequestsRef = collection(db, "FriendRequests");
+      await addDoc(friendRequestsRef, {
+        sender: currentUser.uid,
+        receiver: uid,
+        timestamp: new Date(),
+      });
+      setFriendRequestSent(true);
+    } catch (error) {
+      console.error("Error sending friend request:", error);
     }
   };
+
+  const handleAcceptFriendRequest = async () => {
+    try {
+      // Add to Friendships
+      const friendshipsRef = collection(db, "Friendships");
+      await addDoc(friendshipsRef, {
+        user1: currentUser.uid < uid ? currentUser.uid : uid,
+        user2: currentUser.uid > uid ? currentUser.uid : uid,
+        timestamp: new Date(),
+      });
+
+      // Delete the friend request
+      const friendRequestsRef = collection(db, "FriendRequests");
+      const q = query(
+        friendRequestsRef,
+        where("sender", "==", uid),
+        where("receiver", "==", currentUser.uid)
+      );
+      const requestSnapshot = await getDocs(q);
+      if (!requestSnapshot.empty) {
+        await deleteDoc(requestSnapshot.docs[0].ref);
+      }
+
+      setIsFriend(true);
+      setFriendRequestReceived(false);
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+    }
+  };
+
+  const handleCancelFriendRequest = async () => {
+    try {
+      const friendRequestsRef = collection(db, "FriendRequests");
+      const q = query(
+        friendRequestsRef,
+        where("sender", "==", currentUser.uid),
+        where("receiver", "==", uid)
+      );
+      const requestSnapshot = await getDocs(q);
+      if (!requestSnapshot.empty) {
+        await deleteDoc(requestSnapshot.docs[0].ref);
+      }
+      setFriendRequestSent(false);
+    } catch (error) {
+      console.error("Error cancelling friend request:", error);
+    }
+  };
+
+  if (loading) return <p>Loading...</p>;
 
   //I get the visited user's ID from the URL, and compare it to the logged in.
   //If they are not friends,(which we will check above this), we add them.
@@ -126,60 +204,11 @@ const UserProfile = () => {
     }
   };
 
-  //FETCH ALL FRIENDS
-  //FOR THE Friends field of User Profile
-  // !!!!!!!!! IMPLEMENT
-  const fetchAllFriends = async (uid) => {
-    const friendshipsRef = collection(db, "Friendships");
-
-    // Query friendships where userId is either user1 or user2
-    const q1 = query(friendshipsRef, where("user1", "==", uid));
-    const q2 = query(friendshipsRef, where("user2", "==", uid));
-
-    const friends = [];
-
-    // Fetch user1 results
-    const query1Snapshot = await getDocs(q1);
-    query1Snapshot.forEach((doc) => {
-      const data = doc.data();
-      friends.push(data.user2); // Add the other user
-    });
-
-    // Fetch user2 results
-    const query2Snapshot = await getDocs(q2);
-    query2Snapshot.forEach((doc) => {
-      const data = doc.data();
-      friends.push(data.user1); // Add the other user
-    });
-
-    return friends;
-  };
-
-  useEffect(() => {
-    const loadFriends = async () => {
-      try {
-        const friendsData = await fetchAllFriends(currentUser.uid);
-
-        setFriends(friendsData);
-      } catch (error) {
-        console.error("Error fetching events:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadFriends();
-  }, []);
-
-  //IMPLEMENT THE useEffect that check if they are friends.
-  useEffect(() => {
-    if (uid !== currentUser.uid) {
-      fetchFriendshipStatus();
-    } else {
-      setLoading(false);
-    }
-  }, [uid, currentUser]);
-
   if (loading) return <p>Loading...</p>;
+
+  const handleEditProfile = () => {
+    navigate(`/edit-user-profile/${currentUser.uid}`);
+  };
 
   return (
     <>
@@ -196,32 +225,52 @@ const UserProfile = () => {
           </div>
           <div className="profile-info">
             <img
-              src={userData?.photoURL}
+              src={userData?.photoURL || "https://via.placeholder.com/150"}
               alt="User Avatar"
               className="avatar"
             />
             <div className="profile-details">
               <h1 className="username">{userData?.name}</h1>
-              {console.log(userData)}
               {uid === currentUser.uid ? (
-                <p>Update Profile</p>
+                <button
+                  className="update-profile-button"
+                  onClick={handleEditProfile}
+                >
+                  Update Profile
+                </button>
               ) : (
                 <div>
-                  {isFriend ? (
-                    <button
-                      className="delete-friend-button"
-                      onClick={handleDeleteFriend}
-                    >
-                      Delete Friend
-                    </button>
-                  ) : (
-                    <button
-                      className="add-friend-button"
-                      onClick={handleAddFriend}
-                    >
-                      Add Friend
-                    </button>
-                  )}
+                  <div>
+                    {isFriend ? (
+                      <button
+                        onClick={handleDeleteFriend}
+                        className="delete-friend-button"
+                      >
+                        Delete Friend
+                      </button>
+                    ) : friendRequestSent ? (
+                      <button
+                        onClick={handleCancelFriendRequest}
+                        className="delete-friend-button"
+                      >
+                        Cancel Friend Request
+                      </button>
+                    ) : friendRequestReceived ? (
+                      <button
+                        onClick={handleAcceptFriendRequest}
+                        className="accept-friend-request-button"
+                      >
+                        Accept Friend Request
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSendFriendRequest}
+                        className="add-friend-button"
+                      >
+                        Send Friend Request
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
               <p className="bio">
@@ -280,7 +329,7 @@ const UserProfile = () => {
               <h2>Friends</h2>
               <div className="friends-list">
                 <div className="friend-card">
-                  <img src={currentUser?.photoURL} alt="logo" />
+                  <img src={currentUser?.photoURL} alt="friend" />
                   <p>Geri</p>
                 </div>
               </div>
@@ -299,14 +348,6 @@ const UserProfile = () => {
           {activeTab === "posts" && (
             <div className="posts-section">
               <h2>Posts</h2>
-
-              {/* {posts.map((post) => (
-                <div key={post.id} className="post">
-                  <p>{post.postContent}</p>
-                  <img src={post?.imageUrl} alt="Post Picture" />
-                  {console.log(post)}
-                </div>
-              ))} */}
               <ListMyPosts />
             </div>
           )}

@@ -7,9 +7,11 @@ import {
   deleteDoc,
   doc,
   getDocs,
+  getDoc,
   query,
   where,
   serverTimestamp,
+  orderBy,
 } from "firebase/firestore";
 
 // Create a Context
@@ -29,14 +31,27 @@ export const CommentProvider = ({ children }) => {
     try {
       const q = query(
         collection(db, "Comments"),
-        where("postId", "==", postId)
+        where("postId", "==", postId),
+        orderBy("createdAt", "asc")
       );
       const querySnapshot = await getDocs(q);
-      const fetchedComments = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      const fetchedComments = await Promise.all(
+        querySnapshot.docs.map(async (commentDoc) => {
+          const commentData = commentDoc.data();
+          const userRef = doc(db, "Users", commentData.userId); // Assuming user data is in a "Users" collection
+          const userDoc = await getDoc(userRef);
+          const userData = userDoc.exists() ? userDoc.data() : {};
+          return {
+            id: commentDoc.id,
+            ...commentData,
+            user: userData, // Attach user details to the comment
+          };
+        })
+      );
+      setComments((prev) => ({
+        ...prev,
+        [postId]: fetchedComments,
       }));
-      setComments(fetchedComments);
       return fetchedComments;
     } catch (error) {
       console.error("Error fetching comments:", error);
@@ -45,7 +60,7 @@ export const CommentProvider = ({ children }) => {
   };
 
   // Add a new comment
-  const createComment = async (postId, userId, content) => {
+  const createCommentToPost = async (postId, userId, content) => {
     try {
       const newComment = {
         postId,
@@ -54,7 +69,13 @@ export const CommentProvider = ({ children }) => {
         createdAt: serverTimestamp(),
       };
       const commentRef = await addDoc(collection(db, "Comments"), newComment);
-      setComments((prev) => [...prev, { id: commentRef.id, ...newComment }]);
+      //setComments((prev) => [...prev, { id: commentRef.id, ...newComment }]);
+      // Ensure 'prev' is an array and append the new comment
+      setComments((prev) =>
+        Array.isArray(prev)
+          ? [...prev, { id: commentRef.id, ...newComment }]
+          : [{ id: commentRef.id, ...newComment }]
+      );
       return commentRef;
     } catch (error) {
       console.error("Error creating comment:", error);
@@ -97,7 +118,7 @@ export const CommentProvider = ({ children }) => {
       value={{
         comments,
         fetchCommentsByPostId,
-        createComment,
+        createCommentToPost,
         updateComment,
         deleteComment,
       }}

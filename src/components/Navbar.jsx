@@ -94,7 +94,11 @@ export default function Navbar() {
     <nav className="navbar">
       {/* Logo */}
       <div className="navbar-logo">
-        <img src="img/logo.png" alt="FeedGen Logo" onClick={handleClick} />
+        <img
+          src="https://firebasestorage.googleapis.com/v0/b/feedgen-cd500.firebasestorage.app/o/logo.png?alt=media&token=b3d92bb6-0976-42ff-aaf1-31c459d560b1"
+          alt="FeedGen Logo"
+          onClick={handleClick}
+        />
       </div>
 
       {/* Search Bar */}

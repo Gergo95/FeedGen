@@ -87,7 +87,7 @@ export const EventProvider = ({ children }) => {
   };
 
   //Join group
-  const joinEvent = async (userId, eventId) => {
+  const joinEvent = async (userId, eventId, going) => {
     if (!userId || !eventId) {
       console.lerror("Event ID or User ID is missing!");
       return;

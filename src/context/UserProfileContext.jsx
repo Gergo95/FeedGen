@@ -50,11 +50,43 @@ const UserProfileProvider = ({ children }) => {
     return storageRef;
   };
 
+  const fetchFriends = async (userId) => {
+    try {
+      // Query friendships where the user is either user1 or user2
+      const friendshipsRef = collection(db, "Friendships");
+      const q1 = query(friendshipsRef, where("user1", "==", userId));
+      const q2 = query(friendshipsRef, where("user2", "==", userId));
+
+      const [snapshot1, snapshot2] = await Promise.all([
+        getDocs(q1),
+        getDocs(q2),
+      ]);
+
+      const friendIds = new Set();
+      snapshot1.forEach((doc) => friendIds.add(doc.data().user2));
+      snapshot2.forEach((doc) => friendIds.add(doc.data().user1));
+
+      // Fetch friend details from the "Users" collection
+      const friendsData = [];
+      for (const friendId of friendIds) {
+        const friendDoc = await getDoc(doc(db, "Users", friendId));
+        if (friendDoc.exists()) {
+          friendsData.push({ id: friendDoc.id, ...friendDoc.data() });
+        }
+      }
+      return friendsData;
+    } catch (error) {
+      console.error("Error fetching friends:", error);
+      return [];
+    }
+  };
+
   // Provide posts and CRUD functions to the app
   const value = {
     getUserData,
     updateUserData,
     uploadProfileImage,
+    fetchFriends,
   };
 
   return (

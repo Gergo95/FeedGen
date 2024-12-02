@@ -117,10 +117,6 @@
     font-size: 1.2rem;
   }
 }
-.notification-wrapper {
-  position: relative;
-  display: inline-block;
-}
 
 .notification-button {
   background: none;
@@ -128,6 +124,87 @@
   cursor: pointer;
   position: relative;
   font-size: 1.5rem;
+}
+
+.notification-icon {
+  position: relative;
+  cursor: pointer;
+}
+
+.notification-icon .notification-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.8rem;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 40px; /* Adjust based on your navbar height */
+  right: 10px; /* Align to the right edge of the bell icon */
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  background-color: #333; /* Dark background for good contrast */
+  color: #fff; /* White text for readability */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  padding: 10px;
+}
+/* Individual Notification Item */
+.notification-item {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+/* Read and Unread Notifications */
+.notification-item.read {
+  background-color: #1d1c1c; /* Slightly darker for read notifications */
+}
+
+.notification-item.unread {
+  background-color: #555; /* Slightly brighter for unread notifications */
+  font-weight: bold; /* Highlight unread notifications */
+}
+
+.notification-item p {
+  margin: 0;
+}
+
+.notification-item .timestamp {
+  font-size: 0.8rem;
+  color: #ccc; /* Subtle color for timestamps */
+  margin-top: 5px;
+}
+
+/* Hover Effect */
+.notification-item:hover {
+  background-color: #070606; /* Add a hover effect */
+  cursor: pointer;
+}
+
+/* Scrollbar for Overflow */
+.notification-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-dropdown::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+.notification-dropdown::-webkit-scrollbar-thumb:hover {
+  background-color: #6b5858;
 }
 
 .logout-button {

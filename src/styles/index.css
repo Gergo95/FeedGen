@@ -4,6 +4,18 @@
   box-sizing: border-box;
 }
 
+::-webkit-scrollbar {
+  display: none;
+}
+
+html {
+  scrollbar-width: none;
+}
+
+body {
+  -ms-overflow-style: none;
+}
+
 :root {
   --main-color: #2ecc71; /* Green color for branding */
   --text-color: #333;
@@ -11,12 +23,6 @@
   --secondary-color: #fff;
   --border-radius: 10px;
   --shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-body {
-  font-family: "Arial", sans-serif;
-  background-color: var(--background-color);
-  color: var(--text-color);
 }
 
 /* CSS for a simple spinner */

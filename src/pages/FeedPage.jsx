@@ -1,16 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import "../styles/components/feed.css";
 import PostList from "../components/Post/PostList";
 import PostCreator from "../components/Post/PostCreator";
 import ChatSidebar from "../components/Chat/ChatSidebar";
-import PostFilter from "../components/Post/PostFilter";
 import FilterPagePost from "../components/Post/FilterPagePost";
-import { useState } from "react";
 import Navbar from "../components/Navbar";
 import GroupsPages from "../components/LeftSidebar/GroupsPages";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ChatProvider, useChat } from "../context/ChatContext";
+import { ChatProvider } from "../context/ChatContext";
 import ChatWindow from "../components/Chat/ChatWindow";
 
 const groups = [
@@ -35,12 +33,8 @@ function FeedPage() {
   const navigate = useNavigate();
   const [openChats, setOpenChats] = useState([]); // Make sure this is initialized as an empty array
   const [posts, setPosts] = useState([]);
+  const [selectedOption, setSelectedOption] = useState("pages"); // New state for toggle
 
-  /* const handleSelectChat = (contact) => {
-    setSelectedChat(contact);
-    console.log("Selected Chat:", contact);
-  };
- */
   const handleOpenChat = (friend) => {
     // Check if the chat is already open, if not, add it to the openChats
     console.log("Opening chat with friend:", friend); // Log the friend data when you try to open the chat
@@ -84,9 +78,38 @@ function FeedPage() {
         {/* Middle Column: Posts */}
         <div className="feed-column middle-column">
           <PostCreator />
-          {/* <PostFilter onFilterChange={handleFilterChange} /> */}
-          <FilterPagePost />
-          <PostList posts={posts} />
+
+          {/* Toggle between Pages and Friends */}
+          <div className="toggle-container">
+            <button
+              className={
+                selectedOption === "pages"
+                  ? "toggle-button active"
+                  : "toggle-button"
+              }
+              onClick={() => setSelectedOption("pages")}
+            >
+              Pages
+            </button>
+            <button
+              className={
+                selectedOption === "friends"
+                  ? "toggle-button active"
+                  : "toggle-button"
+              }
+              onClick={() => setSelectedOption("friends")}
+            >
+              Friends
+            </button>
+          </div>
+
+          {/* Conditionally render components based on selectedOption */}
+          {selectedOption === "pages" ? (
+            <FilterPagePost />
+          ) : (
+            <PostList posts={posts} />
+          )}
+
           {/* Modal for Detailed Post View */}
           {selectedPost && (
             <div>

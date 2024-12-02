@@ -9,11 +9,15 @@ import { useAuth } from "../context/AuthContext";
 import { searchDatabase } from "../firebase/firebaseFunctions";
 import SearchBar from "./Navbar/SearchBar";
 import { auth } from "../firebase/firebaseConfig";
+import { useNotifications } from "../context/NotificationContext";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const notificationRef = useRef(null);
   const searchRef = useRef(null);
+
+  const { notifications, markAllAsRead } = useNotifications();
+  const unreadCount = notifications.filter((notif) => !notif.read).length;
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -26,40 +30,13 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState([]);
 
-  const handleClickOutside = (event) => {
-    if (
-      notificationRef.current &&
-      !notificationRef.current.contains(event.target)
-    ) {
-      setShowNotifications(false);
-    }
-
-    if (searchRef.current && !searchRef.current.contains(event.target)) {
-      setSearchQuery("");
+  const handleBellClick = () => {
+    setShowDropdown(!showDropdown);
+    if (!showDropdown) {
+      // Only mark as read when opening the dropdown
+      markAllAsRead();
     }
   };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const sampleNotifications = [
-    { title: "John liked your post", time: "5 mins ago", isRead: false },
-    {
-      title: "New friend request from Jane",
-      time: "1 hour ago",
-      isRead: false,
-    },
-    { title: "Event reminder: React Meetup", time: "Yesterday", isRead: true },
-  ];
-
-  const [showNotifications, setShowNotifications] = useState(false);
-
-  const toggleNotifications = () => {
-    setShowNotifications((prev) => !prev);
-  };
-
   const handleSearch = async (term) => {
     setSearchTerm(term);
     if (term.length > 0) {
@@ -106,19 +83,56 @@ export default function Navbar() {
 
       {/* Icons */}
       <div className="navbar-icons">
-        <div className="notification-wrapper" ref={notificationRef}>
-          <button className="notification-button" onClick={toggleNotifications}>
-            <FaBell className="icon" title="Notifications" />
-            {sampleNotifications.length > 0 && (
-              <span className="badge">{sampleNotifications.length}</span>
-            )}
-          </button>
-          {showNotifications && (
-            <NotificationList notifications={sampleNotifications} />
+        <div className="notification-icon" onClick={handleBellClick}>
+          <FaBell />
+          {unreadCount > 0 && (
+            <span className="notification-count">{unreadCount}</span>
           )}
         </div>
+        {showDropdown && (
+          <div className="notification-dropdown">
+            {notifications.length > 0 ? (
+              notifications.map((notif) => (
+                <div
+                  key={notif.id}
+                  className={`notification-item ${
+                    notif.read ? "read" : "unread"
+                  }`}
+                >
+                  {/* Customize notification message based on type */}
+                  {notif.type === "friend_request" && (
+                    <p>
+                      <strong>{notif.sender?.name || "Someone"}</strong> sent
+                      you a friend request.
+                    </p>
+                  )}
+                  {notif.type === "comment" && (
+                    <p>
+                      <strong>{notif.sender?.name || "Someone"}</strong>{" "}
+                      commented on your post.
+                    </p>
+                  )}
+                  {notif.type === "like" && (
+                    <p>
+                      <strong>{notif.sender?.name || "Someone"}</strong> liked
+                      your post.
+                    </p>
+                  )}
+                  <p className="timestamp">
+                    {notif.timestamp?.toDate().toLocaleString() ||
+                      "Unknown time"}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p>No notifications</p>
+            )}
+          </div>
+        )}
 
-        <FaEnvelope className="icon" title="Messages" />
+        <button className="logout-button">
+          <FaEnvelope className="icon" title="Messages" />
+        </button>
         <button className="logout-button" onClick={handleProfile}>
           <FaUserCircle className="icon" title="Profile" />
         </button>

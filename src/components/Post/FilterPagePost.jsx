@@ -1,8 +1,20 @@
-import { useState, useEffect } from "react";
-import { db } from "../../firebase/firebaseConfig";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import React, { useState, useEffect } from "react";
+import { db, auth } from "../../firebase/firebaseConfig";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  orderBy,
+  doc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 import "../../styles/components/FilterPagePost.css";
 import AddComment from "../Comment/AddComment";
+import { useComments } from "../../context/CommentContext";
 import {
   Select,
   MenuItem,
@@ -10,8 +22,8 @@ import {
   ListItemText,
   InputLabel,
   FormControl,
-  Button,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const FilterPagePost = () => {
   const [posts, setPosts] = useState([]);
@@ -28,6 +40,10 @@ const FilterPagePost = () => {
     "Culture",
     "Else",
   ]);
+  const [showComments, setShowComments] = useState({});
+  const [comments, setComments] = useState({});
+  const { fetchCommentsByPostId } = useComments();
+  const navigate = useNavigate();
 
   const handleCategoryChange = (event) => {
     setSelectedCategories(event.target.value);
@@ -39,32 +55,133 @@ const FilterPagePost = () => {
       let q;
 
       if (categories.length > 0) {
-        const categoryQueries = categories.map((category) =>
-          where("category", "==", category)
-        );
+        // Use 'in' operator to match any of the selected categories
         q = query(
           postsCollection,
-          ...categoryQueries,
+          where("category", "in", categories),
           orderBy("createdAt", "desc")
         );
       } else {
-        q = query(postsCollection);
+        q = query(postsCollection, orderBy("createdAt", "desc"));
       }
 
       const querySnapshot = await getDocs(q);
-      const postsList = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+
+      const postsList = await Promise.all(
+        querySnapshot.docs.map(async (PageDoc) => {
+          const post = { id: PageDoc.id, ...PageDoc.data() };
+          const postComments = await fetchCommentsByPostId(PageDoc.id);
+
+          // Fetch the page data
+          const pageDocRef = doc(db, "Pages", post.pageId);
+          const pageSnapshot = await getDoc(pageDocRef);
+          const pageData = pageSnapshot.exists() ? pageSnapshot.data() : null;
+
+          return {
+            ...post,
+            commentsCount: postComments.length,
+            page: pageData,
+          };
+        })
+      );
 
       setPosts(postsList);
     } catch (error) {
-      console.error("Error fetching posts: ", error);
+      console.error("Error fetching posts:", error);
     }
   };
 
-  const handleCommentAdded = () => {
-    // Refresh the comments after adding a new one
+  const handleToggleComments = async (postId) => {
+    if (!showComments[postId]) {
+      const postComments = await fetchCommentsByPostId(postId);
+      setComments((prev) => ({
+        ...prev,
+        [postId]: postComments,
+      }));
+    }
+    setShowComments((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
+  };
+
+  const handleCommentAdded = async (postId) => {
+    const updatedComments = await fetchCommentsByPostId(postId);
+    setComments((prev) => ({
+      ...prev,
+      [postId]: updatedComments,
+    }));
+
+    // Update comments count in the UI
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? { ...post, commentsCount: updatedComments.length }
+          : post
+      )
+    );
+  };
+
+  const handleLikePost = async (postId) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return; // Ensure the user is logged in
+
+    try {
+      const postRef = doc(db, "PagePosts", postId); // Reference to the post
+      const postSnapshot = await getDoc(postRef); // Fetch the single document
+
+      if (!postSnapshot.exists()) {
+        console.error("Post not found");
+        return;
+      }
+
+      const postData = postSnapshot.data();
+      let likes = postData.likes;
+
+      // Ensure likes is an array, default to empty array if missing or not an array
+      if (!Array.isArray(likes)) {
+        likes = [];
+      }
+
+      // Check if the user has already liked the post
+      if (likes.includes(userId)) {
+        // User has already liked the post, so remove the like
+        await updateDoc(postRef, {
+          likes: arrayRemove(userId),
+        });
+
+        // Optimistic UI update
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                  ...post,
+                  likes: post.likes.filter((like) => like !== userId),
+                }
+              : post
+          )
+        );
+      } else {
+        // User hasn't liked the post yet, so add the like
+        await updateDoc(postRef, {
+          likes: arrayUnion(userId),
+        });
+
+        // Optimistic UI update
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                  ...post,
+                  likes: [...post.likes, userId],
+                }
+              : post
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error liking the post:", error);
+    }
   };
 
   useEffect(() => {
@@ -72,7 +189,7 @@ const FilterPagePost = () => {
   }, [selectedCategories]);
 
   return (
-    <div>
+    <div className="filter-container">
       <FormControl fullWidth>
         <InputLabel>Filter by Category</InputLabel>
         <Select
@@ -84,43 +201,113 @@ const FilterPagePost = () => {
         >
           {categories.map((category) => (
             <MenuItem key={category} value={category}>
-              <Checkbox checked={selectedCategories.indexOf(category) > -1} />
+              <Checkbox checked={selectedCategories.includes(category)} />
               <ListItemText primary={category} />
             </MenuItem>
           ))}
         </Select>
       </FormControl>
 
-      <div className="posts-list">
+      <div className="filter-posts-list">
         {posts.length === 0 ? (
-          <p className="no-posts-message">
+          <p className="filter-no-posts-message">
             No posts available in this category.
           </p>
         ) : (
           posts.map((post) => (
-            <div key={post.id} className="post-card">
-              <div className="post-header">
-                <p className="post-date">
-                  {post.createdAt.toDate().toLocaleString()}
-                </p>
-                <p className="post-page">Page ID: {post.pageId}</p>
+            <div key={post.id} className="filter-post-card">
+              {/* Post Header with Page Info */}
+              <div className="filter-post-header">
+                <div className="filter-avatar-container">
+                  <img
+                    src={
+                      post.page?.photoURL || "https://via.placeholder.com/50"
+                    }
+                    alt="Page Avatar"
+                    className="filter-page-avatar"
+                    onClick={() => navigate(`/pages/${post.pageId}`)}
+                  />
+                </div>
+                <div className="filter-page-info">
+                  <h4
+                    className="filter-page-name"
+                    onClick={() => navigate(`/pages/${post.pageId}`)}
+                  >
+                    {post.page?.name || "Unknown Page"}
+                  </h4>
+                  <p className="filter-post-date">
+                    {post.createdAt.toDate().toLocaleString()}
+                  </p>
+                </div>
               </div>
-              <h3 className="post-title">{post.title}</h3>
-              <p className="post-content">{post.content}</p>
+
+              {/* Post Content */}
+              <h3 className="filter-post-title">{post.title}</h3>
+              <p className="filter-post-content">{post.content}</p>
               {post.imageUrl && (
                 <img
                   src={post.imageUrl}
                   alt="Post visual"
-                  className="post-image"
+                  className="filter-post-image"
                 />
               )}
 
-              <div className="post-actions">
-                <button className="like-button">Like</button>
-                <button className="comment-button">Comment</button>
+              {/* Post Footer */}
+              <div className="filter-post-footer">
+                <div className="filter-likes">
+                  <button
+                    className="filter-like-button"
+                    onClick={() => handleLikePost(post.id)}
+                  >
+                    ❤️ {post.likes.length}{" "}
+                    {post.likes.length === 1 ? "Like" : "Likes"}
+                  </button>
+                </div>
+                <button
+                  className="filter-toggle-comments-btn"
+                  onClick={() => handleToggleComments(post.id)}
+                >
+                  {showComments[post.id]
+                    ? "Hide Comments"
+                    : `View Comments (${post.commentsCount || 0})`}
+                </button>
               </div>
 
-              <AddComment postId={post.id} onAddComment={handleCommentAdded} />
+              {/* Comments Section */}
+              {showComments[post.id] && (
+                <div className="filter-comments-section">
+                  {comments[post.id]?.length > 0 ? (
+                    comments[post.id].map((comment) => (
+                      <div key={comment.id} className="filter-comment">
+                        <img
+                          src={
+                            comment.user?.photoURL ||
+                            "https://via.placeholder.com/50"
+                          }
+                          alt="User Avatar"
+                          className="filter-comment-user-avatar"
+                        />
+                        <strong className="filter-comment-user-name">
+                          {comment.user?.name || "Anonymous"}:
+                        </strong>
+                        <div className="filter-comment-content">
+                          {comment.content}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="filter-no-comments-message">
+                      No comments yet.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Add Comment */}
+              <AddComment
+                postId={post.id}
+                onAddComment={() => handleCommentAdded(post.id)}
+              />
             </div>
           ))
         )}

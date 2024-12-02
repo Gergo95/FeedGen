@@ -10,6 +10,8 @@ import FemaleIcon from "@mui/icons-material/Female";
 import TransgenderIcon from "@mui/icons-material/Transgender";
 import { useParams } from "react-router-dom";
 import Navbar from "../Navbar";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 const GenderToggle = ({ gender, onChange }) => {
   const handleGenderChange = (event, newGender) => {
@@ -71,6 +73,8 @@ const GenderToggle = ({ gender, onChange }) => {
 };
 
 function UserProfileEditor({ userId }) {
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [profile, setProfile] = useState({
     fname: "",
     lname: "",
@@ -131,6 +135,7 @@ function UserProfileEditor({ userId }) {
       await updateUserData(uid, profile);
       setLoading(false);
       alert("Profile updated successfully!");
+      navigate(`/user/${currentUser.uid}`);
     } catch (err) {
       setError("Failed to update profile");
       console.error(err);

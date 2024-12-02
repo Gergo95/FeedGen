@@ -1,23 +1,28 @@
 .login-container {
   margin: 0;
   font-family: "Poppins", sans-serif;
-  display: flex;
+  /* Eltávolítva a display: flex és a magasság beállításokat */
+  /* display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: 100vh; */
   color: #333;
+  /* Hozzáadva padding a tartalom elválasztásához */
+  padding: 1rem 0;
 }
 
 .login-page {
   width: 100%;
   max-width: 400px;
-  padding: 20px;
+  /* Középre igazítás */
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 .login-card {
   background: white;
   border-radius: 15px;
-  padding: 30px;
+  padding: 20px; /* Csökkentve a padding-et */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
@@ -31,11 +36,11 @@
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px; /* Csökkentve a gap-et */
 }
 
 .login-form input {
-  padding: 12px;
+  padding: 10px; /* Csökkentve a padding-et */
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
@@ -49,22 +54,23 @@
 
 .login-button {
   width: 100%;
-  padding: 0.8rem;
+  padding: 0.6rem; /* Csökkentve a padding-et */
   background-color: var(--main-color);
   border: none;
   color: var(--secondary-color);
   font-size: 1rem;
   border-radius: var(--border-radius);
   cursor: pointer;
-  margin-top: 1rem;
+  margin-top: 0.8rem; /* Csökkentve a margót */
   transition: background 0.3s;
 }
 
 .login-button:hover {
   background-color: #27ae60;
 }
+
 .divider {
-  margin: 20px 0;
+  margin: 15px 0; /* Csökkentve a margót */
   display: flex;
   align-items: center;
   gap: 10px;
@@ -88,7 +94,7 @@
   gap: 10px;
   background: white;
   border: 1px solid #ddd;
-  padding: 10px;
+  padding: 8px; /* Csökkentve a padding-et */
   border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
@@ -106,7 +112,7 @@
 }
 
 .switch-form p {
-  margin-top: 20px;
+  margin-top: 15px; /* Csökkentve a margót */
   font-size: 0.9rem;
 }
 

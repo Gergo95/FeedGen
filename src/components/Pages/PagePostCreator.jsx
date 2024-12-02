@@ -48,7 +48,7 @@ const PagePostCreator = () => {
         category,
         content,
         imageUrl: imageUrl || null,
-        likes: 0,
+        likes: [],
         createdAt: serverTimestamp(),
       });
       setCategory("");

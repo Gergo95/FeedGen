@@ -20,6 +20,7 @@ import { usePosts } from "../context/PostContext";
 import PostList from "../components/Post/PostList";
 import ListMyPosts from "../components/Post/ListMyPosts";
 import UserProfileEditor from "../components/UserProfile/UserProfileEditor";
+import { useUserProf } from "../context/UserProfileContext";
 
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState("about");
@@ -34,6 +35,27 @@ const UserProfile = () => {
   const { posts, fetchUserData } = usePosts();
   const [friendRequestSent, setFriendRequestSent] = useState(false);
   const [friendRequestReceived, setFriendRequestReceived] = useState(false);
+  const [myFriends, setMyFriends] = useState([]);
+  const { fetchFriends } = useUserProf();
+
+  useEffect(() => {
+    console.log("UserProfile useEffect called for friends");
+    const loadFriends = async () => {
+      if (!uid) {
+        console.log("No UID provided");
+        return;
+      }
+      try {
+        const fetchedFriends = await fetchFriends(uid); // Fetch friends for the new UID
+        console.log("Fetched friends:", fetchedFriends);
+        setMyFriends(fetchedFriends);
+      } catch (error) {
+        console.error("Error fetching friends:", error);
+      }
+    };
+
+    loadFriends();
+  }, [uid, fetchFriends]); // Trigger when `uid` changes
 
   useEffect(() => {
     // Fetch user data after login
@@ -273,9 +295,6 @@ const UserProfile = () => {
                   </div>
                 </div>
               )}
-              <p className="bio">
-                Full-stack developer, coffee lover, and traveler 🌍
-              </p>
             </div>
           </div>
         </div>
@@ -298,7 +317,7 @@ const UserProfile = () => {
             className={`tab-button ${activeTab === "photos" ? "active" : ""}`}
             onClick={() => handleTabChange("photos")}
           >
-            Photos
+            Activity
           </button>
           <button
             className={`tab-button ${activeTab === "posts" ? "active" : ""}`}
@@ -313,14 +332,13 @@ const UserProfile = () => {
           {activeTab === "about" && (
             <div className="about-section">
               <h2>About</h2>
-              <p>
-                Hi, I’m John! I’m passionate about building web applications and
-                exploring new technologies.
-              </p>
+              <p>{uid?.about}</p>
               <ul>
-                <li>Location: Toronto, Canada</li>
-                <li>Profession: Software Developer</li>
-                <li>Hobbies: Coding, hiking, photography</li>
+                <li>Profession: {uid?.job}</li>
+                <li>Relationship status: {uid?.relationshipStatus}</li>
+                <li>School: {uid?.school}</li>
+                <li>Gender: {uid?.gender}</li>
+                <li>Date of Birth: {uid?.dob}</li>
               </ul>
             </div>
           )}
@@ -328,16 +346,25 @@ const UserProfile = () => {
             <div className="friends-section">
               <h2>Friends</h2>
               <div className="friends-list">
-                <div className="friend-card">
-                  <img src={currentUser?.photoURL} alt="friend" />
-                  <p>Geri</p>
-                </div>
+                {myFriends.map((friend) => (
+                  <div
+                    key={friend.id}
+                    className="friend-card"
+                    onClick={() => navigate(`/user/${friend.id}`)}
+                  >
+                    <img
+                      src={friend.photoURL || "https://via.placeholder.com/100"}
+                      alt="friend"
+                    />
+                    <p>{friend.name || "Unknown User"}</p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
           {activeTab === "photos" && (
             <div className="photos-section">
-              <h2>Photos</h2>
+              <h2>Activity</h2>
               <div className="photos-grid">
                 <img src="https://via.placeholder.com/200" alt="Photo 1" />
                 <img src="https://via.placeholder.com/200" alt="Photo 2" />

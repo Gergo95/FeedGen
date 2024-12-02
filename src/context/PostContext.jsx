@@ -1,3 +1,5 @@
+// PostContext.jsx
+
 import { db, storage } from "../firebase/firebaseConfig";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import React, { createContext, useContext, useState, useEffect } from "react";
@@ -13,9 +15,11 @@ import {
   serverTimestamp,
   query,
   where,
+  arrayUnion,
+  arrayRemove,
+  orderBy,
 } from "firebase/firestore";
-import { useAuth } from "./AuthContext"; // Import your authentication context
-import { useParams } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 
 // Create the PostContext
 const PostContext = createContext();
@@ -27,16 +31,11 @@ export const usePosts = () => useContext(PostContext);
 const PostProvider = ({ children }) => {
   const [posts, setPosts] = useState([]);
   const [myPosts, setMyPosts] = useState([]);
-  const [friendsPosts, setFriendsPosts] = useState([]);
-
-  const { uid } = useParams();
+  const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth(); // Get the logged-in user's info
 
   const postsRef = collection(db, "Posts");
   const friendshipsRef = collection(db, "Friendships");
-  const [userDetails, setUserDetails] = useState({});
-
-  const [loading, setLoading] = useState(true);
-  const { currentUser } = useAuth(); // Get the logged-in user's info
 
   const fetchUserData = async (userId) => {
     try {
@@ -55,59 +54,95 @@ const PostProvider = ({ children }) => {
     }
   };
 
-  // Fetch all posts along with user details
-  const fetchPostsWithUserDetails = async () => {
+  // Function to fetch posts from the current user and their friends
+  const fetchFriendsPosts = async (currentUserUid) => {
     setLoading(true);
     try {
-      const querySnapshot = await getDocs(postsRef);
-      const postsWithDetails = await Promise.all(
-        querySnapshot.docs.map(async (postDoc) => {
-          const postData = postDoc.data();
-          const userDoc = await getDoc(doc(db, "Users", postData.uid));
-          const userData = userDoc.exists() ? userDoc.data() : null;
-          console.log(userData);
-
-          return {
-            id: postDoc.id, // Auto-generated Document ID
-            ...postData,
-            user: userData, // Attach user details
-          };
-        })
+      // Fetch friendships where currentUserUid is either user1 or user2
+      const friendshipsQuery1 = query(
+        friendshipsRef,
+        where("user1", "==", currentUserUid)
       );
-      setPosts(postsWithDetails);
-      console.log(postsWithDetails);
-    } catch (error) {
-      console.error("Error fetching posts with user details:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const friendshipsQuery2 = query(
+        friendshipsRef,
+        where("user2", "==", currentUserUid)
+      );
 
-  // Real-time listener for posts with user details
-  useEffect(() => {
-    const unsubscribe = onSnapshot(postsRef, async (snapshot) => {
-      try {
+      const [snapshot1, snapshot2] = await Promise.all([
+        getDocs(friendshipsQuery1),
+        getDocs(friendshipsQuery2),
+      ]);
+
+      const friendIdsSet = new Set();
+
+      // Collect friend UIDs
+      snapshot1.forEach((doc) => {
+        const data = doc.data();
+        friendIdsSet.add(data.user2); // user1 is currentUserUid, so user2 is the friend
+      });
+      snapshot2.forEach((doc) => {
+        const data = doc.data();
+        friendIdsSet.add(data.user1); // user2 is currentUserUid, so user1 is the friend
+      });
+
+      // Include current user's UID
+      friendIdsSet.add(currentUserUid);
+
+      const friendIds = Array.from(friendIdsSet);
+
+      if (friendIds.length === 0) {
+        console.log("No friends found.");
+        return [];
+      }
+
+      // Handle Firestore limitation of 10 items in 'in' queries
+      const chunks = [];
+      const chunkSize = 10;
+
+      for (let i = 0; i < friendIds.length; i += chunkSize) {
+        chunks.push(friendIds.slice(i, i + chunkSize));
+      }
+
+      let allPosts = [];
+
+      for (const chunk of chunks) {
+        const postsQuery = query(
+          postsRef,
+          where("uid", "in", chunk),
+          orderBy("createdAt", "desc")
+        );
+
+        const postsSnapshot = await getDocs(postsQuery);
+
+        // Map posts and attach user details
         const postsWithDetails = await Promise.all(
-          snapshot.docs.map(async (postDoc) => {
+          postsSnapshot.docs.map(async (postDoc) => {
             const postData = postDoc.data();
             const userDoc = await getDoc(doc(db, "Users", postData.uid));
             const userData = userDoc.exists() ? userDoc.data() : null;
 
             return {
-              id: postDoc.id, // Auto-generated Document ID
+              id: postDoc.id,
               ...postData,
-              user: userData, // Attach user details
+              user: userData,
             };
           })
         );
-        setPosts(postsWithDetails);
-      } catch (error) {
-        console.error("Error in real-time listener for posts:", error);
-      }
-    });
 
-    return () => unsubscribe(); // Cleanup listener
-  }, []);
+        allPosts = allPosts.concat(postsWithDetails);
+      }
+
+      // Sort all posts by createdAt in descending order
+      allPosts.sort((a, b) => b.createdAt - a.createdAt);
+
+      return allPosts;
+    } catch (error) {
+      console.error("Error fetching friends' posts:", error);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Function to fetch the current user's posts
   const fetchMyPosts = async (uid) => {
@@ -129,121 +164,6 @@ const PostProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
-  // Function to fetch posts of the user's friends
-  const fetchFriendsPosts = async (currentUserUid) => {
-    setLoading(true);
-    try {
-      // Fetch the user's friendships
-      console.log(currentUserUid);
-      const querySnapshot = await getDocs(
-        query(friendshipsRef, where("user1", "==", currentUserUid))
-      );
-
-      const friendIds = new Set();
-
-      // Collect friend IDs from friendships
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        friendIds.add(data.user1 === currentUserUid ? data.user2 : data.user1);
-      });
-      // Log the friend IDs after the loop
-      console.log("Friend IDs:", Array.from(friendIds));
-
-      // If no friends, return an empty array
-      if (friendIds.size === 0) {
-        console.log("No friends found.");
-        return [];
-      }
-
-      // Query posts of friends
-      const friendPostsQuery = query(
-        postsRef,
-        where("uid", "in", Array.from(friendIds)) // Only fetch posts by friends
-      );
-      console.log("Friend Posts Query: ", friendPostsQuery);
-
-      if (Array.from(friendIds).length > 0) {
-        const friendPostsSnapshot = await getDocs(friendPostsQuery);
-        console.log("Friend Posts Snapshot: ", friendPostsSnapshot);
-
-        // Map posts and attach user details
-        const friendPostsWithDetails = await Promise.all(
-          friendPostsSnapshot.docs.map(async (postDoc) => {
-            const postData = postDoc.data();
-            const userDoc = await getDoc(doc(db, "Users", postData.uid));
-            const userData = userDoc.exists() ? userDoc.data() : null;
-
-            return {
-              id: postDoc.id, // Auto-generated Document ID
-              ...postData,
-              user: userData, // Attach user details
-            };
-          })
-        );
-        console.log(
-          "Frinedspostdetails : " + Array.from(friendPostsWithDetails)
-        );
-        console.log(
-          "Friend Posts with Details in POstContext end: ",
-          friendPostsWithDetails
-        );
-
-        return friendPostsWithDetails;
-      }
-    } catch (error) {
-      console.error("Error fetching friends' posts:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Real-time listener for friends' posts
-  useEffect(() => {
-    if (!currentUser) return;
-
-    const unsubscribe = onSnapshot(friendshipsRef, async (snapshot) => {
-      const friendIds = new Set();
-
-      // Collect friend IDs from updated friendships
-      snapshot.docs.forEach((doc) => {
-        const data = doc.data();
-        friendIds.add(data.user1 === currentUser.uid ? data.user2 : data.user1);
-      });
-
-      // If no friends, return an empty array
-      if (friendIds.length === 0) {
-        console.log("No friends found.");
-        return [];
-      }
-
-      // Query posts of friends
-      const friendPostsQuery = query(
-        postsRef,
-        where("uid", "in", Array.from(friendIds))
-      );
-
-      const friendPostsSnapshot = await getDocs(friendPostsQuery);
-
-      const friendPostsWithDetails = await Promise.all(
-        friendPostsSnapshot.docs.map(async (postDoc) => {
-          const postData = postDoc.data();
-          const userDoc = await getDoc(doc(db, "Users", postData.uid));
-          const userData = userDoc.exists() ? userDoc.data() : null;
-
-          return {
-            id: postDoc.id,
-            ...postData,
-            user: userData,
-          };
-        })
-      );
-
-      setPosts(friendPostsWithDetails);
-    });
-
-    return () => unsubscribe(); // Cleanup listener
-  }, [currentUser]);
 
   // Create a new post
   const createPost = async (newPost, imageFile, currentUser) => {
@@ -312,6 +232,27 @@ const PostProvider = ({ children }) => {
     }
   };
 
+  // Function to like/unlike a post
+  const toggleLikePost = async (postId, userId, isLiked, type = "Posts") => {
+    try {
+      const postRef = doc(db, type, postId); // Change to "PagePosts" for page posts
+      if (isLiked) {
+        await updateDoc(postRef, {
+          likes: arrayRemove(userId), // Remove userId from likes array
+        });
+      } else {
+        await updateDoc(postRef, {
+          likes: arrayUnion(userId), // Add userId to likes array
+        });
+      }
+      console.log(
+        `Post ${postId} ${isLiked ? "unliked" : "liked"} by ${userId}`
+      );
+    } catch (error) {
+      console.error("Error updating likes:", error);
+    }
+  };
+
   // Provide posts and CRUD functions to the app
   const value = {
     posts,
@@ -320,10 +261,10 @@ const PostProvider = ({ children }) => {
     createPost,
     updatePost,
     deletePost,
-    fetchPostsWithUserDetails,
     fetchFriendsPosts,
     fetchMyPosts,
     fetchUserData,
+    toggleLikePost,
   };
 
   return <PostContext.Provider value={value}>{children}</PostContext.Provider>;

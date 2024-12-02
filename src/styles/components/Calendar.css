@@ -1,0 +1,151 @@
+/* General Calendar Container */
+.calendar-container {
+  margin: 15px auto;
+  padding: 10px;
+  max-width: 100%;
+  height: 100vh;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Calendar Header */
+.rbc-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #388e3c;
+}
+
+.rbc-toolbar button {
+  background: #388e3c;
+  border: none;
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.rbc-toolbar button:hover {
+  background: #2e7d32;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Calendar Navigation Arrows */
+.rbc-toolbar button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.5);
+}
+
+/* Calendar Month/Week/Day View Names */
+.rbc-toolbar-label {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Calendar Table */
+.rbc-calendar {
+  background-color: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rbc-month-view {
+  border: 1px solid #ddd;
+}
+
+.rbc-header {
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+  padding: 10px 0;
+  background-color: #f1f1f1;
+  border-bottom: 1px solid #ddd;
+}
+
+.rbc-date-cell {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.rbc-month-row {
+  border-bottom: 1px solid #ddd;
+}
+
+.rbc-day-bg {
+  transition: background-color 0.3s ease;
+}
+
+.rbc-day-bg:hover {
+  background-color: #e8f5e9;
+  cursor: pointer;
+}
+
+/* Events Display */
+.rbc-event {
+  background-color: #4caf50;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  text-align: center;
+  margin: 2px 0;
+}
+
+.rbc-event:hover {
+  background-color: #388e3c;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Today's Date Highlight */
+.rbc-today {
+  background-color: #e8f5e9;
+  border: 1px solid #4caf50;
+}
+
+/* Selected Date */
+.rbc-selected-cell {
+  background-color: #c8e6c9 !important;
+}
+
+/* Responsive Styling */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .rbc-toolbar-label {
+    font-size: 1.2rem;
+  }
+
+  .rbc-event {
+    font-size: 0.7rem;
+    padding: 3px 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rbc-toolbar {
+    gap: 5px;
+  }
+
+  .rbc-toolbar button {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+  }
+
+  .rbc-toolbar-label {
+    font-size: 1rem;
+  }
+}

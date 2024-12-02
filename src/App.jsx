@@ -23,109 +23,112 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 import UserProfileEditor from "./components/UserProfile/UserProfileEditor";
 import UserProfileProvider from "./context/UserProfileContext";
+import { NotificationProvider } from "./context/NotificationContext";
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <PostProvider>
-          <GroupProvider>
-            <CommentProvider>
-              <FriendRequestProvider>
-                <PageProvider>
-                  <EventProvider>
-                    <ChatProvider>
-                      <UserProfileProvider>
-                        <Routes>
-                          {/* Public Routes */}
-                          <Route path="/login" element={<Login />} />
-                          <Route path="/signup" element={<SignUp />} />
-                          <Route path="/home" element={<Home />} />
+        <NotificationProvider>
+          <PostProvider>
+            <GroupProvider>
+              <CommentProvider>
+                <FriendRequestProvider>
+                  <PageProvider>
+                    <EventProvider>
+                      <ChatProvider>
+                        <UserProfileProvider>
+                          <Routes>
+                            {/* Public Routes */}
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/signup" element={<SignUp />} />
+                            <Route path="/home" element={<Home />} />
 
-                          {/* Protected Routes */}
-                          <Route
-                            path="/feed"
-                            element={
-                              <ProtectedRoute>
-                                <FeedPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/group-profile/:groupId"
-                            element={
-                              <ProtectedRoute>
-                                <Groups />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/edit-user-profile/:uid"
-                            element={
-                              <ProtectedRoute>
-                                <UserProfileEditor />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/user/:uid"
-                            element={
-                              <ProtectedRoute>
-                                <UserProfile />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/pages/:pageId"
-                            element={
-                              <ProtectedRoute>
-                                <Pages />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/search-results"
-                            element={
-                              <ProtectedRoute>
-                                <SearchResultsPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/notifications"
-                            element={
-                              <ProtectedRoute>
-                                <NotificationsPage />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/events/:eventId"
-                            element={
-                              <ProtectedRoute>
-                                <Events />
-                              </ProtectedRoute>
-                            }
-                          />
-                          <Route
-                            path="/create-new"
-                            element={
-                              <ProtectedRoute>
-                                <UserCreation />
-                              </ProtectedRoute>
-                            }
-                          />
+                            {/* Protected Routes */}
+                            <Route
+                              path="/feed"
+                              element={
+                                <ProtectedRoute>
+                                  <FeedPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/group-profile/:groupId"
+                              element={
+                                <ProtectedRoute>
+                                  <Groups />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/edit-user-profile/:uid"
+                              element={
+                                <ProtectedRoute>
+                                  <UserProfileEditor />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/user/:uid"
+                              element={
+                                <ProtectedRoute>
+                                  <UserProfile />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/pages/:pageId"
+                              element={
+                                <ProtectedRoute>
+                                  <Pages />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/search-results"
+                              element={
+                                <ProtectedRoute>
+                                  <SearchResultsPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/notifications"
+                              element={
+                                <ProtectedRoute>
+                                  <NotificationsPage />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/events/:eventId"
+                              element={
+                                <ProtectedRoute>
+                                  <Events />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/create-new"
+                              element={
+                                <ProtectedRoute>
+                                  <UserCreation />
+                                </ProtectedRoute>
+                              }
+                            />
 
-                          <Route path="*" element={<Home />} />
-                        </Routes>
-                        <ToastContainer />
-                      </UserProfileProvider>
-                    </ChatProvider>
-                  </EventProvider>
-                </PageProvider>
-              </FriendRequestProvider>
-            </CommentProvider>
-          </GroupProvider>
-        </PostProvider>
+                            <Route path="*" element={<Home />} />
+                          </Routes>
+                          <ToastContainer />
+                        </UserProfileProvider>
+                      </ChatProvider>
+                    </EventProvider>
+                  </PageProvider>
+                </FriendRequestProvider>
+              </CommentProvider>
+            </GroupProvider>
+          </PostProvider>
+        </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
   );

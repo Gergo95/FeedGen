@@ -1,58 +1,147 @@
-import React from "react";
+// PostList.jsx
+
+import React, { useState, useEffect } from "react";
 import "../../styles/components/post.css";
-import { FiThumbsUp, FiMessageCircle } from "react-icons/fi";
-import { useState, useEffect } from "react";
+import { FiThumbsUp } from "react-icons/fi";
 import AddComment from "../Comment/AddComment";
 import { usePosts } from "../../context/PostContext";
-import { db } from "../../firebase/firebaseConfig";
-import {
-  collection,
-  getDoc,
-  doc,
-  getDocs,
-  orderBy,
-  where,
-  query,
-} from "firebase/firestore";
 import { useComments } from "../../context/CommentContext";
-import ImageModal from "../Modals/ImageModal";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+} from "firebase/firestore";
+import { db } from "../../firebase/firebaseConfig";
 
 const PostList = () => {
   const [showComments, setShowComments] = useState({});
-  const [friendsPosts, setFriendsPosts] = useState([]);
   const [comments, setComments] = useState({});
-  const { fetchFriendsPosts, loading } = usePosts();
+  const { toggleLikePost } = usePosts();
   const { fetchCommentsByPostId } = useComments();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadFriendsPostsAndComments = async () => {
-      if (!currentUser) return;
+    if (!currentUser) return;
 
+    let unsubscribeFunctions = [];
+    let postsMap = new Map();
+
+    const fetchAndSubscribeToPosts = async () => {
       try {
-        // Fetch posts
-        const posts = await fetchFriendsPosts(currentUser.uid);
-        setFriendsPosts(posts);
+        const friendshipsRef = collection(db, "Friendships");
 
-        // Fetch comments for each post
-        const commentsByPost = {};
-        await Promise.all(
-          posts.map(async (post) => {
-            const postComments = await fetchCommentsByPostId(post.id);
-            commentsByPost[post.id] = postComments;
-          })
+        // Fetch friendships where currentUserUid is either user1 or user2
+        const friendshipsQuery1 = query(
+          friendshipsRef,
+          where("user1", "==", currentUser.uid)
+        );
+        const friendshipsQuery2 = query(
+          friendshipsRef,
+          where("user2", "==", currentUser.uid)
         );
 
-        setComments(commentsByPost); // Set all comments in state
+        const [snapshot1, snapshot2] = await Promise.all([
+          getDocs(friendshipsQuery1),
+          getDocs(friendshipsQuery2),
+        ]);
+
+        const friendIdsSet = new Set();
+
+        // Collect friend UIDs
+        snapshot1.forEach((doc) => {
+          const data = doc.data();
+          friendIdsSet.add(data.user2);
+        });
+        snapshot2.forEach((doc) => {
+          const data = doc.data();
+          friendIdsSet.add(data.user1);
+        });
+
+        // Include current user's UID
+        friendIdsSet.add(currentUser.uid);
+
+        const friendIds = Array.from(friendIdsSet);
+
+        if (friendIds.length === 0) {
+          console.log("No friends found.");
+          setPosts([]);
+          setLoading(false);
+          return;
+        }
+
+        // Handle Firestore limitation of 10 items in 'in' queries
+        const chunks = [];
+        const chunkSize = 10;
+
+        for (let i = 0; i < friendIds.length; i += chunkSize) {
+          chunks.push(friendIds.slice(i, i + chunkSize));
+        }
+
+        chunks.forEach((chunk) => {
+          const postsQuery = query(
+            collection(db, "Posts"),
+            where("uid", "in", chunk),
+            orderBy("createdAt", "desc")
+          );
+
+          const unsubscribe = onSnapshot(postsQuery, async (snapshot) => {
+            const changes = snapshot.docChanges();
+            let postsChanged = false;
+
+            for (const change of changes) {
+              const postDoc = change.doc;
+              const postData = postDoc.data();
+              const userDoc = await getDoc(doc(db, "Users", postData.uid));
+              const userData = userDoc.exists() ? userDoc.data() : null;
+              const post = {
+                id: postDoc.id,
+                ...postData,
+                user: userData,
+              };
+
+              if (change.type === "added" || change.type === "modified") {
+                postsMap.set(post.id, post);
+                postsChanged = true;
+              } else if (change.type === "removed") {
+                postsMap.delete(post.id);
+                postsChanged = true;
+              }
+            }
+
+            if (postsChanged) {
+              // Update the posts state
+              const allPostsArray = Array.from(postsMap.values());
+              // Sort all posts by createdAt in descending order
+              allPostsArray.sort((a, b) => b.createdAt - a.createdAt);
+              setPosts(allPostsArray);
+            }
+            setLoading(false);
+          });
+
+          unsubscribeFunctions.push(unsubscribe);
+        });
       } catch (error) {
-        console.error("Error loading posts and comments:", error);
+        console.error("Error subscribing to posts:", error);
+        setLoading(false);
       }
     };
 
-    loadFriendsPostsAndComments();
+    fetchAndSubscribeToPosts();
+
+    return () => {
+      // Clean up the listeners
+      unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+    };
   }, [currentUser]);
 
   if (loading) return <p>Loading...</p>;
@@ -62,25 +151,43 @@ const PostList = () => {
       ...prev,
       [postId]: !prev[postId],
     }));
+
+    // Fetch comments when comments are toggled on
+    if (!showComments[postId]) {
+      fetchCommentsByPostId(postId)
+        .then((postComments) => {
+          setComments((prev = {}) => ({
+            ...prev,
+            [postId]: postComments,
+          }));
+        })
+        .catch((error) => {
+          console.error("Error fetching comments:", error);
+        });
+    }
   };
 
   const handleCommentAdded = async (postId) => {
     try {
       const updatedComments = await fetchCommentsByPostId(postId);
-      // Safely update the state, ensuring prev is always an object
       setComments((prev = {}) => ({
-        ...prev, // Spread the previous state to maintain other post comments
-        [postId]: updatedComments, // Update the comments for the specific postId
+        ...prev,
+        [postId]: updatedComments,
       }));
     } catch (error) {
       console.error("Error updating comments after adding:", error);
     }
   };
 
+  const handleLike = async (postId, isLiked) => {
+    if (!currentUser?.uid) return; // Ensure user is logged in
+    await toggleLikePost(postId, currentUser.uid, isLiked, "Posts");
+  };
+
   return (
     <div className="post-list">
-      {friendsPosts.length > 0 ? (
-        friendsPosts.map((post) => (
+      {posts.length > 0 ? (
+        posts.map((post) => (
           <div key={post.id} className="post-card">
             {/* User Info */}
             <div className="post-header">
@@ -97,7 +204,11 @@ const PostList = () => {
                 >
                   {post.user?.name}
                 </h4>
-                <p>{post.timestamp}</p>
+                <p>
+                  {post.createdAt
+                    ? post.createdAt.toDate().toLocaleString()
+                    : ""}
+                </p>
               </div>
             </div>
 
@@ -109,21 +220,24 @@ const PostList = () => {
 
             {/* Actions */}
             <div className="post-actions">
-              <button className="action-button">
-                <FiThumbsUp /> Like
-              </button>
               <button
-                className="action-button"
-                onClick={() => handleToggleComments(post.id)}
+                className={`action-button ${
+                  post.likes.includes(currentUser?.uid) ? "liked" : ""
+                }`}
+                onClick={() =>
+                  handleLike(post.id, post.likes.includes(currentUser?.uid))
+                }
               >
-                <FiMessageCircle /> Comment
+                <FiThumbsUp />
+                {post.likes.includes(currentUser?.uid) ? " Unlike" : " Like"}
               </button>
             </div>
 
             {/* Likes and Comments */}
             <div className="post-footer">
               <div className="likes">
-                ❤️ {post.likes} {post.likes === 1 ? "Like" : "Likes"}
+                ❤️ {post.likes.length}{" "}
+                {post.likes.length === 1 ? "Like" : "Likes"}
               </div>
               <button
                 className="toggle-comments-btn"
@@ -155,8 +269,8 @@ const PostList = () => {
                         className="comment-user-name"
                       >
                         {comment.user?.name || "Anonymous"}:
-                      </strong>{" "}
-                      <div className="comment-content"> {comment.content}</div>
+                      </strong>
+                      <div className="comment-content">{comment.content}</div>
                     </div>
                   ))
                 ) : (
@@ -176,7 +290,7 @@ const PostList = () => {
         ))
       ) : (
         <div className="no-posts-message">
-          <p>No posts to show from your friends.</p>
+          <p>No posts to show from you or your friends.</p>
         </div>
       )}
     </div>

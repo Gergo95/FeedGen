@@ -187,3 +187,141 @@
 .accept-friend-request-button {
   background-color: rgba(248, 248, 7, 0.811);
 }
+
+.about-section {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.about-section h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #333333;
+  border-bottom: 2px solid #28a745;
+  padding-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.about-section p {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  color: #555555;
+}
+
+.about-section ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.about-section ul li {
+  font-size: 1.1rem;
+  margin-bottom: 0.8rem;
+  color: #666666;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.about-section ul li::before {
+  content: "•";
+  color: #28a745;
+  font-size: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .about-section {
+    padding: 1.5rem;
+  }
+
+  .about-section h2 {
+    font-size: 1.8rem;
+  }
+
+  .about-section p {
+    font-size: 1rem;
+  }
+
+  .about-section ul li {
+    font-size: 1rem;
+  }
+}
+
+.friends-section {
+  margin: 2rem auto;
+  padding: 2rem;
+  max-width: 800px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.friends-section h2 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #28a745;
+  padding-bottom: 0.5rem;
+  text-align: center;
+}
+
+.friends-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.friend-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 150px;
+  padding: 1rem;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+}
+
+.friend-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.friend-card img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+}
+
+.friend-card p {
+  font-size: 1.1rem;
+  color: #555;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .friend-card {
+    width: 100px;
+    padding: 0.8rem;
+  }
+
+  .friend-card p {
+    font-size: 0.9rem;
+  }
+}

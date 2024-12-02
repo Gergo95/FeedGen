@@ -1,13 +1,14 @@
+/* FilterPagePost.css */
+
 /* Main container for filtering and posts */
 .filter-container {
+  max-width: 900px; /* Increased max-width for better readability */
+  width: 100%;
+  margin: 20px auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Increased spacing between posts */
-  width: 100%;
-  margin: 0 auto;
-  padding: 1.5rem;
-  box-sizing: border-box;
-  max-width: 900px; /* Restrict maximum width for better readability */
+  gap: 25px; /* Increased gap between posts */
+  align-items: stretch; /* Ensure children can grow as needed */
 }
 
 /* Material UI dropdown container styling */
@@ -17,7 +18,7 @@
 }
 
 /* Posts List */
-.posts-list {
+.filter-posts-list {
   display: flex;
   flex-direction: column;
   gap: 25px; /* Increased gap for a less crowded layout */
@@ -25,74 +26,66 @@
 }
 
 /* Individual Post Card */
-.post-card {
-  background-color: #ffffff;
+.filter-post-card {
+  background: #fff;
+  flex: 0 1 auto; /* Allow the post card to grow/shrink naturally */
   border-radius: 12px;
-  padding: 25px;
+  padding: 20px;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   border: 1px solid #ddd;
+  overflow: visible; /* Add this line */
 }
 
-.post-card:hover {
+.filter-post-card:hover {
   transform: translateY(-12px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
-.post-card h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 12px;
-  transition: color 0.3s ease;
-}
-
-.post-card h3:hover {
-  color: #28a745; /* Change color on hover */
-}
-
-.post-card p {
-  font-size: 1rem;
-  color: #555;
-  line-height: 1.6;
-  max-height: 90px; /* More generous text space */
-  overflow: hidden;
-}
-
-.post-card a {
-  display: inline-block;
-  margin-top: 12px;
-  font-weight: bold;
-  color: #007bff;
-  text-decoration: none;
-  transition: color 0.3s ease, transform 0.3s ease;
-}
-
-.post-card a:hover {
-  color: #0056b3;
-  transform: translateX(5px); /* Subtle movement on hover */
-}
-
 /* Post Header */
-.post-header {
+.filter-post-header {
   display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-  color: #777;
+  align-items: center;
   margin-bottom: 15px;
 }
 
-.post-header .post-date {
-  font-style: italic;
+.filter-avatar-container {
+  flex-shrink: 0;
+  margin-right: 15px;
 }
 
-.post-header .post-page {
-  font-weight: 600;
+.filter-page-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.filter-page-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-page-name {
+  font-size: 1.2rem;
   color: #333;
+  margin: 0;
+  cursor: pointer;
+}
+
+.filter-page-name:hover {
+  color: #007bff;
+}
+
+.filter-post-date {
+  font-size: 0.9rem;
+  color: #777;
+  margin-top: 5px;
 }
 
 /* Post Title */
-.post-title {
+.filter-post-title {
   font-size: 1.6rem;
   margin: 15px 0;
   color: #333;
@@ -100,14 +93,14 @@
 }
 
 /* Post Content */
-.post-content {
+.filter-post-content {
   font-size: 1.1rem;
   color: #555;
   margin-bottom: 15px;
 }
 
 /* Post Image */
-.post-image {
+.filter-post-image {
   width: 100%;
   max-height: 400px;
   object-fit: cover;
@@ -116,15 +109,15 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Post Actions */
-.post-actions {
+/* Post Footer */
+.filter-post-footer {
   display: flex;
-  gap: 15px;
-  margin-top: 10px;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
 }
 
-.like-button,
-.comment-button {
+.filter-like-button {
   background-color: #4caf50;
   color: white;
   border: none;
@@ -133,23 +126,57 @@
   cursor: pointer;
   font-size: 1rem;
   transition: all 0.3s ease;
-  text-transform: uppercase;
 }
 
-.like-button:hover,
-.comment-button:hover {
+.filter-like-button:hover {
   background-color: #45a049;
-  transform: translateY(-3px); /* Smooth lift effect */
 }
 
-.like-button:focus,
-.comment-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.3);
+.filter-toggle-comments-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.filter-toggle-comments-btn:hover {
+  text-decoration: underline;
+}
+
+/* Comments Section */
+.filter-comments-section {
+  margin-top: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.filter-comment {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.filter-comment-user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.filter-comment-user-name {
+  margin-right: 5px;
+  font-weight: bold;
+}
+
+.filter-comment-content {
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 5px;
 }
 
 /* Empty State (No Posts) */
-.no-posts-message {
+.filter-no-posts-message {
   text-align: center;
   font-size: 1.3rem;
   color: #888;
@@ -166,74 +193,33 @@
     width: 90%;
   }
 
-  .post-card {
+  .filter-post-card {
     padding: 20px;
   }
 
-  .post-card h3 {
-    font-size: 1.3rem;
+  .filter-page-avatar {
+    width: 30px;
+    height: 30px;
   }
 
-  .post-content {
+  .filter-page-name {
     font-size: 1rem;
   }
 
-  .post-image {
+  .filter-post-title {
+    font-size: 1.3rem;
+  }
+
+  .filter-post-content {
+    font-size: 1rem;
+  }
+
+  .filter-post-image {
     max-height: 300px;
   }
 
-  .like-button,
-  .comment-button {
-    padding: 10px 20px;
+  .filter-like-button,
+  .filter-toggle-comments-btn {
     font-size: 0.9rem;
   }
 }
-
-/* .posts-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: 1rem;
-  box-sizing: border-box;
-}
- */
-/*  Individual Post Card Styling 
-.post-card {
-   display: block; /* Each post takes up the full width 
-  width: 100%; /* Ensures the post spans the container 
-  padding: 1rem;
-  background-color: #fff; /* Set a background for better visibility 
-  border: 1px solid #ddd; /* Add a subtle border 
-  border-radius: 8px; /* Round the corners slightly 
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a shadow for depth 
-  transition: transform 0.2s, box-shadow 0.2s; 
-} */
-
-/* .add-comment {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.comment-input {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 1rem;
-}
-
-.submit-comment {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.submit-comment:hover {
-  background-color: #0056b3;
-} */

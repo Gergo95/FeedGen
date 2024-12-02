@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import ListEvents from "../Events/ListEvents";
 import ListGroups from "../Groups/ListGroups";
 import ListPages from "../Pages/ListPages";
+import MyBigCalendar from "../Calendar/MyBigCalendar";
 
 const GroupsPages = ({ user, groups, pages, events }) => {
   const [activeTab, setActiveTab] = useState("groups");
@@ -39,6 +40,7 @@ const GroupsPages = ({ user, groups, pages, events }) => {
         return events.length > 0 ? (
           <ul className="content-list">
             <ListEvents />
+            <MyBigCalendar />
           </ul>
         ) : (
           <p className="empty-message">No events to display.</p>
@@ -61,7 +63,12 @@ const GroupsPages = ({ user, groups, pages, events }) => {
           {currentUser.name}
         </p>
       </div>
-
+      <button
+        className="create-new-button"
+        onClick={() => navigate("/create-new")}
+      >
+        Create New
+      </button>
       {/* Tabs */}
       <div className="tabs">
         <button
@@ -83,17 +90,9 @@ const GroupsPages = ({ user, groups, pages, events }) => {
           Events
         </button>
       </div>
-
+      <div></div>
       {/* Content */}
-      <div className="tab-content">
-        {renderContent()}
-        <button
-          className="create-new-button"
-          onClick={() => navigate("/create-new")}
-        >
-          Create New
-        </button>
-      </div>
+      <div className="tab-content">{renderContent()}</div>
     </div>
   );
 };

@@ -13,16 +13,19 @@
   display: flex;
   flex-direction: column;
   gap: 25px; /* Increased gap between posts */
+  align-items: stretch; /* Ensure children can grow as needed */
 }
 
 /* Post Card */
 .post-card {
   background: #fff;
+  flex: 0 1 auto; /* Allow the post card to grow/shrink naturally */
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   border: 1px solid #ddd;
+  overflow: visible; /* Add this line */
 }
 
 .post-card:hover {
@@ -58,6 +61,12 @@
 }
 
 /* Post Content */
+
+.post-content {
+  max-height: none; /* Add this line */
+  overflow: visible; /* Add this line */
+}
+
 .post-content p {
   margin: 15px 0;
   font-size: 1.1rem;

@@ -1,5 +1,3 @@
-// PostContext.jsx
-
 import { db, storage } from "../firebase/firebaseConfig";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import React, { createContext, useContext, useState, useEffect } from "react";
@@ -21,13 +19,10 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "./AuthContext";
 
-// Create the PostContext
 const PostContext = createContext();
 
-// Custom hook to use the PostContext
 export const usePosts = () => useContext(PostContext);
 
-// PostProvider Component
 const PostProvider = ({ children }) => {
   const [posts, setPosts] = useState([]);
   const [myPosts, setMyPosts] = useState([]);
@@ -253,7 +248,6 @@ const PostProvider = ({ children }) => {
     }
   };
 
-  // Provide posts and CRUD functions to the app
   const value = {
     posts,
     myPosts,

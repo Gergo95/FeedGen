@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { db } from "../firebase/firebaseConfig"; // Adjust path if needed
+import { db } from "../firebase/firebaseConfig";
 import {
   collection,
   query,
@@ -149,7 +149,6 @@ export const NotificationProvider = ({ children }) => {
       await batch.commit(); // Commit the batch operation
       console.log("All notifications marked as read.");
 
-      // Update local state
       setNotifications((prev) =>
         prev.map((notif) => ({ ...notif, read: true }))
       );

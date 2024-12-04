@@ -1,15 +1,10 @@
 import React, { useState } from "react";
 import "../styles/components/login.css";
-import { auth, googleProvider } from "../firebase/firebaseConfig";
-import {
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
-} from "firebase/auth";
+import { auth, googleProvider, db } from "../firebase/firebaseConfig";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { createContext } from "react";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useAuth } from "../context/AuthContext";
 
 function Login() {
@@ -18,40 +13,111 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { loading: authLoading } = useAuth(); // Correctly destructure loading from useAuth
 
   const singInWithGoogle = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      await signInWithPopup(auth, googleProvider);
-      navigate("/user/" + auth.currentUser.uid); // Redirect to the feed page after successful login
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const user = userCredential.user;
+
+      // Check if user email is verified
+      if (!user.emailVerified) {
+        toast.error("Please verify your email before logging in.", {
+          position: "top-center",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Ensure user is added to Firestore
+      await ensureUserInFirestore(user);
+
+      toast.success("Logged in with Google successfully!", {
+        position: "top-center",
+      });
+      navigate("/feed");
     } catch (err) {
       console.error(err);
+      setError("Failed to login with Google.");
     }
     setLoading(false);
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log("Login button clicked");
+
     setLoading(true);
     setError("");
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log("Login successful : " + currentUser.uid);
-      navigate("/feed"); // Redirect to the feed page after successful login
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      // Check if user email is verified
+      if (!user.emailVerified) {
+        toast.error("Please verify your email before logging in.", {
+          position: "top-center",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Ensure user is added to Firestore
+      await ensureUserInFirestore(user);
+
+      console.log("User logged in:", user);
+      toast.success("User logged in successfully!", {
+        position: "top-center",
+      });
+
+      // Wait for AuthContext to resolve before navigating
+      const waitForAuth = setInterval(() => {
+        if (!authLoading) {
+          clearInterval(waitForAuth);
+          console.log("Navigating to /feed");
+          navigate("/feed");
+        }
+      }, 100); // Check every 100ms
     } catch (err) {
+      console.error("Login error:", err);
+      toast.error(err.message, {
+        position: "bottom-center",
+      });
       setError("Failed to login. Please check your email and password.");
     }
 
     setLoading(false);
   };
 
-  //we can use this for the current user
-  //console.log(auth?.currentUser?.email);
-  //with google login we can access photo -> auth.currentUser.photoURL
+  // Ensure the user is added to Firestore
+  const ensureUserInFirestore = async (user) => {
+    try {
+      const userRef = doc(db, "Users", user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName || "Anonymous",
+          photoURL: user.photoURL || "/default-avatar.png",
+          createdAt: new Date(),
+        });
+        console.log("User added to Firestore:", user.uid);
+      }
+    } catch (err) {
+      console.error("Error adding user to Firestore:", err);
+      throw err;
+    }
+  };
 
   return (
     <div className="login-container">

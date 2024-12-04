@@ -1,5 +1,5 @@
 import React from "react";
-import useComments from "./useComments"; // Hook to fetch comments
+import useComments from "./useComments";
 
 const CommentsList = ({ postId }) => {
   const comments = useComments(postId);

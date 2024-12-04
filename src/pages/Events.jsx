@@ -1,50 +1,54 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PostCreator from "../components/Post/PostCreator";
 import PostList from "../components/Post/PostList";
 import Navbar from "../components/Navbar";
 import "../styles/components/Events.css";
 import { useEvents } from "../context/EventsContext";
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
-const posts = [
-  {
-    userName: "Alice Johnson",
-    userAvatar: "https://via.placeholder.com/50",
-    timestamp: "Just now",
-    content: "Exploring the beauty of nature 🌿",
-    image: "https://via.placeholder.com/600x400",
-  },
-  {
-    userName: "Bob Smith",
-    userAvatar: "https://via.placeholder.com/50",
-    timestamp: "1 hour ago",
-    content: "Had a fantastic day at the park!",
-  },
-];
+import { db } from "../firebase/firebaseConfig";
+import { doc, getDoc, deleteDoc } from "firebase/firestore";
+import { toast, ToastContainer } from "react-toastify";
 
 function Events() {
   const { eventId } = useParams();
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const { events, loading, error, fetchEventByEventId, joinEvent, leaveEvent } =
     useEvents();
 
+  const [eventMembers, setEventMembers] = useState([]);
+
   useEffect(() => {
     if (eventId) {
-      fetchEventByEventId(eventId); // Fetch event when component mounts or eventId changes
+      fetchEventByEventId(eventId);
     }
   }, [eventId, fetchEventByEventId]);
+
+  useEffect(() => {
+    // Fetch event members' details
+    const fetchEventMembers = async () => {
+      if (events?.goingId?.length > 0) {
+        const membersData = await Promise.all(
+          events.goingId.map(async (memberId) => {
+            const userRef = doc(db, "Users", memberId);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+              return { id: memberId, ...userSnap.data() };
+            }
+            return null;
+          })
+        );
+        setEventMembers(membersData.filter((member) => member !== null));
+      }
+    };
+
+    fetchEventMembers();
+  }, [events]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
   if (!events) return <div>Event not found</div>;
-
-  let eventCreator = false;
-
-  if (events.creatorId === currentUser.uid) {
-    eventCreator = true;
-  }
 
   const isGoing = (events?.goingId || []).includes(currentUser?.uid);
 
@@ -57,8 +61,6 @@ function Events() {
     try {
       await joinEvent(currentUser.uid, eventId, events.going);
       alert("You have successfully joined the event!");
-      // Re-fetch event data and membership status
-      //I do this so that after someone joins, the page refreshes itself
       await fetchEventByEventId(eventId);
     } catch (error) {
       console.error("Failed to join event:", error);
@@ -75,13 +77,29 @@ function Events() {
     try {
       await leaveEvent(eventId, currentUser.uid, events.going);
       alert("You have successfully left the event!");
-      events.going = events.going - 1;
-
-      // Re-fetch event data or update local state
       await fetchEventByEventId(eventId);
     } catch (error) {
       console.error("Failed to leave event:", error);
       alert("Error: Unable to leave the event.");
+    }
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    if (!window.confirm("Are you sure you want to delete this event?")) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "Events", eventId));
+      toast.success("event deleted successfully!", {
+        position: "top-center",
+      });
+      navigate("/feed");
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      toast.error("Failed to delete event.", {
+        position: "bottom-center",
+      });
     }
   };
 
@@ -101,10 +119,21 @@ function Events() {
           <div className="event-info">
             <h2>{events.name}</h2>
             <p>{events.going} Going</p>
-            {events.creatorId == currentUser.uid ? (
-              <button className="edit-btn" onClick={handleLeaveButton}>
-                Edit Event
-              </button>
+            {events.creatorId === currentUser.uid ? (
+              <>
+                <button
+                  className="edit-btn"
+                  onClick={() => navigate(`/edit-event-profile/${eventId}`)}
+                >
+                  Edit Event
+                </button>
+                <button
+                  className="leave-btn"
+                  onClick={() => handleDeleteEvent(eventId)}
+                >
+                  Delete Event
+                </button>
+              </>
             ) : isGoing ? (
               <button className="leave-btn" onClick={handleLeaveButton}>
                 Leave Event
@@ -127,44 +156,33 @@ function Events() {
             </div>
             <div className="stats-section">
               <div className="stat-item">
-                <strong>{events.going}</strong>
-                <span>Going</span>
-              </div>
-              <div className="stat-item">
-                <strong>45</strong>
-                <span>Posts Today</span>
+                <strong>Going: {events.going}</strong>
               </div>
             </div>
             <div className="members-section">
-              <h3>Members Going</h3>
-              <div className="member">
-                <img
-                  src="https://via.placeholder.com/50"
-                  alt="Member 1"
-                  className="member-pic"
-                />
-                <p>Jane Smith</p>
-              </div>
-              <div className="member">
-                <img
-                  src="https://via.placeholder.com/50"
-                  alt="Member 2"
-                  className="member-pic"
-                />
-                <p>John Doe</p>
-              </div>
-              <a href="#" className="view-more">
-                View All Members
-              </a>
+              {eventMembers.length > 0 ? (
+                eventMembers.map((member) => (
+                  <div key={member.id} className="member">
+                    <img
+                      src={member.photoURL || "https://via.placeholder.com/50"}
+                      alt={member.name || "Unknown"}
+                      className="member-pic"
+                    />
+                    <p>{member.name || "Unknown User"}</p>
+                  </div>
+                ))
+              ) : (
+                <p>No members to display.</p>
+              )}
             </div>
           </aside>
 
           <section className="event-main-section">
             {isGoing ? (
               <>
-                <PostCreator />
+                <PostCreator contextType="Event" contextId={eventId} />
                 <h3>Posts</h3>
-                <PostList posts={posts} />
+                <PostList contextType="Event" contextId={eventId} />
               </>
             ) : (
               <h3>You have to join the Event to participate</h3>

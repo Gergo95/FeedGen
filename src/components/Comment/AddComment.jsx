@@ -5,7 +5,7 @@ import { useComments } from "../../context/CommentContext";
 
 const AddComment = ({ postId, onAddComment }) => {
   const [commentText, setCommentText] = useState("");
-  const { currentUser } = useAuth(); // Get the currently logged-in user
+  const { currentUser } = useAuth();
   const { createCommentToPost } = useComments();
 
   const handleSubmit = async (e) => {
@@ -15,7 +15,7 @@ const AddComment = ({ postId, onAddComment }) => {
     try {
       await createCommentToPost(postId, currentUser.uid, commentText);
       setCommentText(""); // Clear the textarea
-      if (onAddComment) onAddComment(); // Optional: Notify parent to refresh comments
+      if (onAddComment) onAddComment();
     } catch (error) {
       console.error("Failed to add comment:", error);
     }

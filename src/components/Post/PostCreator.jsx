@@ -1,9 +1,11 @@
+// PostCreator.jsx
+
 import React, { useState } from "react";
 import "../../styles/components/PostCreator.css";
 import { usePosts } from "../../context/PostContext";
 import { useAuth } from "../../context/AuthContext";
 
-const PostCreator = () => {
+const PostCreator = ({ contextType, contextId }) => {
   const [postContent, setPostContent] = useState("");
   const [postImage, setPostImage] = useState(null);
   const { createPost } = usePosts(); // Destructure createPost from usePosts
@@ -27,17 +29,21 @@ const PostCreator = () => {
       return;
     }
 
-    await createPost(
-      {
-        postContent,
-      },
-      postImage,
-      currentUser
-    );
+    const postData = {
+      postContent,
+      contextType: contextType || null,
+      contextId: contextId || null,
+    };
 
-    // Clear the form
-    setPostContent("");
-    setPostImage(null);
+    try {
+      await createPost(postData, postImage, currentUser);
+      // Clear the form
+      setPostContent("");
+      setPostImage(null);
+    } catch (error) {
+      console.error("Error creating post:", error);
+      alert("Failed to create post. Please try again.");
+    }
   };
 
   return (
@@ -45,7 +51,11 @@ const PostCreator = () => {
       <form onSubmit={handleSubmit}>
         <textarea
           className="post-input"
-          placeholder="What's on your mind?"
+          placeholder={
+            contextType
+              ? `Share something in this ${contextType.toLowerCase()}...`
+              : "What's on your mind?"
+          }
           value={postContent}
           onChange={handlePostContentChange}
         />

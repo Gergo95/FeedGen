@@ -1,40 +1,34 @@
-/* FilterPagePost.css */
-
-/* Main container for filtering and posts */
 .filter-container {
-  max-width: 900px; /* Increased max-width for better readability */
+  max-width: 900px;
   width: 100%;
   margin: 20px auto;
   display: flex;
   flex-direction: column;
-  gap: 25px; /* Increased gap between posts */
-  align-items: stretch; /* Ensure children can grow as needed */
+  gap: 25px;
+  align-items: stretch;
 }
 
-/* Material UI dropdown container styling */
 .MuiFormControl-root {
   width: 100%;
-  max-width: 400px; /* Limit the width on larger screens */
+  max-width: 400px;
 }
 
-/* Posts List */
 .filter-posts-list {
   display: flex;
   flex-direction: column;
-  gap: 25px; /* Increased gap for a less crowded layout */
+  gap: 25px;
   margin-top: 20px;
 }
 
-/* Individual Post Card */
 .filter-post-card {
   background: #fff;
-  flex: 0 1 auto; /* Allow the post card to grow/shrink naturally */
+  flex: 0 1 auto;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   border: 1px solid #ddd;
-  overflow: visible; /* Add this line */
+  overflow: visible;
 }
 
 .filter-post-card:hover {
@@ -42,7 +36,6 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
-/* Post Header */
 .filter-post-header {
   display: flex;
   align-items: center;
@@ -84,7 +77,6 @@
   margin-top: 5px;
 }
 
-/* Post Title */
 .filter-post-title {
   font-size: 1.6rem;
   margin: 15px 0;
@@ -92,14 +84,12 @@
   font-weight: bold;
 }
 
-/* Post Content */
 .filter-post-content {
   font-size: 1.1rem;
   color: #555;
   margin-bottom: 15px;
 }
 
-/* Post Image */
 .filter-post-image {
   width: 100%;
   max-height: 400px;
@@ -109,7 +99,6 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Post Footer */
 .filter-post-footer {
   display: flex;
   justify-content: space-between;
@@ -144,7 +133,6 @@
   text-decoration: underline;
 }
 
-/* Comments Section */
 .filter-comments-section {
   margin-top: 15px;
   border-top: 1px solid #eee;
@@ -175,7 +163,6 @@
   border-radius: 5px;
 }
 
-/* Empty State (No Posts) */
 .filter-no-posts-message {
   text-align: center;
   font-size: 1.3rem;
@@ -183,7 +170,6 @@
   font-style: italic;
 }
 
-/* Mobile Responsiveness */
 @media (max-width: 768px) {
   .filter-container {
     padding: 1rem;

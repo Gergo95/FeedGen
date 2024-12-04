@@ -3,11 +3,11 @@ import { useAuth } from "../../context/AuthContext";
 import { useEffect } from "react";
 import "../../styles/components/ListGroups.css";
 import { useGroups } from "../../context/GroupContext";
-import { Link } from "react-router-dom"; // Import Link for navigation
+import { Link } from "react-router-dom";
 
 const ListGroups = () => {
   const { currentUser } = useAuth();
-  const { fetchGroupsByUser } = useGroups();
+  const { fetchGroupsYourMember } = useGroups();
   const [selectedGroups, setSelectedGroups] = useState(null);
 
   const [groups, setGroups] = useState([]);
@@ -15,14 +15,14 @@ const ListGroups = () => {
   useEffect(() => {
     const loadGroups = async () => {
       try {
-        const groupsData = await fetchGroupsByUser(currentUser.uid);
+        const groupsData = await fetchGroupsYourMember(currentUser.uid);
         setGroups(groupsData);
       } catch (error) {
         console.error("Error fetching groups:", error);
       }
     };
     loadGroups();
-  }, [fetchGroupsByUser]);
+  }, [fetchGroupsYourMember]);
 
   return (
     <>

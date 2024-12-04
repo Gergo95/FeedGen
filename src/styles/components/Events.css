@@ -1,4 +1,3 @@
-/* Event Container */
 .event-container {
   max-width: 1200px;
   margin: 20px auto;
@@ -9,7 +8,6 @@
   font-family: "Roboto", sans-serif;
 }
 
-/* Event Header */
 .event-header {
   position: relative;
   height: 220px;
@@ -95,7 +93,6 @@
   background-color: #fb8c00;
 }
 
-/* Event Content */
 .event-content {
   display: grid;
   grid-template-columns: 1fr 2fr;
@@ -110,7 +107,6 @@
   }
 }
 
-/* Sidebar */
 .event-sidebar {
   background-color: #fff;
   padding: 20px;
@@ -160,7 +156,6 @@
   font-weight: 500;
 }
 
-/* Main Section */
 .event-main-section h3 {
   color: #4caf50;
   font-weight: bold;

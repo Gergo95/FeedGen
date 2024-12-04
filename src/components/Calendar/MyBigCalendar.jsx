@@ -12,16 +12,16 @@ const localizer = momentLocalizer(moment);
 const MyBigCalendar = () => {
   const [events, setEvents] = useState([]);
   const { currentUser } = useAuth();
-  const { fetchEventsByUser } = useEvents(); // Access via the hook
+  const { fetchEventsYouGoing } = useEvents();
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadEvents = async () => {
-      const eventsData = await fetchEventsByUser(currentUser.uid);
-      // Map Firestore events to Big Calendar format
+      const eventsData = await fetchEventsYouGoing(currentUser.uid);
+
       const formattedEvents = eventsData.map((event) => ({
         id: event.id,
-        title: event.name, // Adjust to your event structure
+        title: event.name,
         start: new Date(event.date),
         end: new Date(event.date),
         allDay: true,

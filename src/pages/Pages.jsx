@@ -1,65 +1,50 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/components/Page.css";
 import PostList from "../components/Post/PostList";
 import PagePostCreator from "../components/Pages/PagePostCreator";
 import Navbar from "../components/Navbar";
-import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { doc } from "firebase/firestore";
+import { useNavigate, useParams } from "react-router-dom";
+import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
-import { getDoc } from "firebase/firestore";
 import { usePages } from "../context/PagesContext";
 import { useAuth } from "../context/AuthContext";
-
-const posts = [
-  {
-    userName: "Alice Johnson",
-    userAvatar: "https://via.placeholder.com/50",
-    timestamp: "Just now",
-    content: "Exploring the beauty of nature 🌿",
-    image: "https://via.placeholder.com/600x400",
-  },
-  {
-    userName: "Bob Smith",
-    userAvatar: "https://via.placeholder.com/50",
-    timestamp: "1 hour ago",
-    content: "Had a fantastic day at the park!",
-  },
-  {
-    userName: "Bob Smith",
-    userAvatar: "https://via.placeholder.com/50",
-    timestamp: "1 hour ago",
-    content: "Had a fantastic day at the park!",
-  },
-  {
-    userName: "Bob Smith",
-    userAvatar: "https://via.placeholder.com/50",
-    timestamp: "1 hour ago",
-    content: "Had a fantastic day at the park!",
-  },
-];
-
+import { toast, ToastContainer } from "react-toastify";
 function Pages() {
   const { pageId } = useParams();
-  const [loading, setLoading] = React.useState(true);
-  const [userData, setUserData] = useState(null);
   const { currentUser } = useAuth();
-
-  const { pages, fetchPageByPageId, followPage, unFollowPage } = usePages();
+  const { pages, fetchPageByPageId, followPage, unfollowPage } = usePages();
+  const [pageFollowers, setPageFollowers] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (pageId) {
-      fetchPageByPageId(pageId); // Fetch group when component mounts or groupId changes
+      fetchPageByPageId(pageId);
     }
   }, [pageId, fetchPageByPageId]);
 
-  let pageCreator = false;
+  useEffect(() => {
+    // Fetch followers' details
+    const fetchPageFollowers = async () => {
+      if (pages?.followersId?.length > 0) {
+        const followersData = await Promise.all(
+          pages.followersId.map(async (followerId) => {
+            const userRef = doc(db, "Users", followerId);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+              return { id: followerId, ...userSnap.data() };
+            }
+            return null;
+          })
+        );
+        setPageFollowers(followersData.filter((follower) => follower !== null));
+      }
+    };
 
-  if (pages.creatorId === currentUser.uid) {
-    pageCreator = true;
-  }
+    fetchPageFollowers();
+  }, [pages]);
 
   const isFollower = (pages?.followersId || []).includes(currentUser?.uid);
+  const pageCreator = pages.creatorId === currentUser?.uid;
 
   const handleFollowButton = async () => {
     if (!pageId || !currentUser.uid) {
@@ -70,8 +55,6 @@ function Pages() {
     try {
       await followPage(pageId, currentUser.uid, pages.followers);
       alert("You have successfully followed the page!");
-      // Re-fetch group data and membership status
-      //I do this so that after someone joins, the page refreshes itself
       await fetchPageByPageId(pageId);
     } catch (error) {
       console.error("Failed to follow page:", error);
@@ -86,11 +69,8 @@ function Pages() {
     }
 
     try {
-      await unFollowPage(pageId, currentUser.uid);
+      await unfollowPage(pageId, currentUser.uid);
       alert("You have successfully unfollowed the page!");
-      pages.followers = pages.followers - 1;
-
-      // Re-fetch group data or update local state
       await fetchPageByPageId(pageId);
     } catch (error) {
       console.error("Failed to unfollow page:", error);
@@ -98,22 +78,56 @@ function Pages() {
     }
   };
 
+  const handleDeletePage = async (pageId) => {
+    if (!window.confirm("Are you sure you want to delete this page?")) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "Pages", pageId));
+      toast.success("Page deleted successfully!", {
+        position: "top-center",
+      });
+      navigate("/feed");
+    } catch (error) {
+      console.error("Error deleting page:", error);
+      toast.error("Failed to delete page.", {
+        position: "bottom-center",
+      });
+    }
+  };
+
   return (
     <>
       <Navbar />
       <div className="page-container">
-        {/* Page Header */}
+        {/* Group Header */}
         <div className="page-header">
-          <div className="page-banner"></div>
-          <div className="page-info">
+          <div className="page-banner">
             <img
-              src={pages?.photoURL}
-              alt="Page Photo"
+              src={pages?.photoURL || "https://via.placeholder.com/1200x200"}
+              alt="page Banner"
               className="page-avatar"
             />
+          </div>
+          <div className="page-info">
             <h2>{pages.name}</h2>
-            <p>Page · {pages.followers} Followers</p>
-            {isFollower ? (
+            {pageCreator ? (
+              <>
+                <button
+                  className="edit-btn"
+                  onClick={() => navigate(`/edit-page-profile/${pageId}`)}
+                >
+                  Edit Page
+                </button>
+                <button
+                  className="leave-btn"
+                  onClick={() => handleDeletePage(pageId)}
+                >
+                  Delete Page
+                </button>
+              </>
+            ) : isFollower ? (
               <button className="leave-btn" onClick={handleUnfollowButton}>
                 Unfollow Page
               </button>
@@ -125,61 +139,53 @@ function Pages() {
           </div>
         </div>
 
-        {/* Page Action Bar */}
-        <div className="page-action-bar">
-          {pageCreator && <button className="edit-btn">Edit Page</button>}
-        </div>
-
-        {/* Page Content */}
+        {/* Group Content */}
         <div className="page-content">
-          {/* Sidebar */}
-          <aside className="page-sidebar">
+          <div className="page-sidebar">
+            {/* Sidebar Content */}
             <div className="about-section">
               <h3>About</h3>
               <p>{pages.about}</p>
             </div>
             <div className="stats-section">
               <div className="stat-item">
-                <strong>{pages.followers}</strong>
-                <span>Followers</span>
-              </div>
-              <div className="stat-item">
-                <strong>45</strong>
-                <span>Posts Today</span>
+                <strong>Followers: {pages.followers}</strong>
               </div>
             </div>
             <div className="members-section">
-              <h3>Members</h3>
-              <div className="member">
-                <img
-                  src="https://via.placeholder.com/50"
-                  alt="Member 1"
-                  className="member-pic"
-                />
-                <p>Jane Smith</p>
-              </div>
-              <div className="member">
-                <img
-                  src="https://via.placeholder.com/50"
-                  alt="Member 2"
-                  className="member-pic"
-                />
-                <p>John Doe</p>
-              </div>
-              <a href="#" className="view-more">
-                View All Members
-              </a>
+              {pageFollowers.length > 0 ? (
+                pageFollowers.map((follower) => (
+                  <div key={follower.id} className="member">
+                    <img
+                      src={
+                        follower.photoURL || "https://via.placeholder.com/50"
+                      }
+                      alt={follower.name || "Unknown"}
+                      className="member-pic"
+                    />
+                    <p>{follower.name || "Unknown User"}</p>
+                  </div>
+                ))
+              ) : (
+                <p>No follower to display.</p>
+              )}
             </div>
-          </aside>
+          </div>
 
+          {/* Main Section */}
           {/* Main Section */}
           <section className="page-main-section">
             {pageCreator && <PagePostCreator />}
             <h3>Posts</h3>
-            <PostList posts={posts} />
+            <PostList
+              contextType="Page"
+              contextId={pageId}
+              postType="PagePosts"
+            />
           </section>
         </div>
       </div>
+      <ToastContainer />
     </>
   );
 }

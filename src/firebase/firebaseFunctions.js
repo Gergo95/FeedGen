@@ -2,14 +2,13 @@ import { collection, doc, getDocs, query, where } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 export const searchDatabase = async (searchTerm) => {
   try {
-    const usersRef = collection(db, "Users"); // Adjust the collection name
-    const postsRef = collection(db, "Posts"); // If searching across multiple collections
-    const groupsRef = collection(db, "Groups"); // If searching across multiple collections
+    const usersRef = collection(db, "Users");
+    const postsRef = collection(db, "Posts");
+    const groupsRef = collection(db, "Groups");
 
     const results = [];
 
     if (searchTerm) {
-      // Query Users
       const userQuery = query(
         usersRef,
         where("fullname", ">=", searchTerm),
@@ -20,7 +19,6 @@ export const searchDatabase = async (searchTerm) => {
         results.push({ id: doc.id, type: "User", ...doc.data() });
       });
 
-      // Query Posts (Optional: Expand this for other collections)
       const postQuery = query(
         postsRef,
         where("postContent", ">=", searchTerm),

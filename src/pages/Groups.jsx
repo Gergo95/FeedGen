@@ -6,21 +6,11 @@ import "../styles/components/Groups.css";
 import { useAuth } from "../context/AuthContext";
 import { useParams } from "react-router-dom";
 import { useGroups } from "../context/GroupContext";
-const posts = [
-  {
-    userName: "Alice Johnson",
-    userAvatar: "https://via.placeholder.com/50",
-    timestamp: "Just now",
-    content: "Exploring the beauty of nature 🌿",
-    image: "https://via.placeholder.com/600x400",
-  },
-  {
-    userName: "Bob Smith",
-    userAvatar: "https://via.placeholder.com/50",
-    timestamp: "1 hour ago",
-    content: "Had a fantastic day at the park!",
-  },
-];
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { db } from "../firebase/firebaseConfig";
+import { doc, getDoc, deleteDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 function Groups() {
   const { groupId } = useParams();
@@ -28,14 +18,37 @@ function Groups() {
   const { groups, loading, error, fetchGroupByGroupId, joinGroup, leaveGroup } =
     useGroups();
 
+  const [groupMembers, setGroupMembers] = useState([]);
   let groupCreator = false;
   let isMember = false;
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (groupId) {
-      fetchGroupByGroupId(groupId); // Fetch group when component mounts or groupId changes
+      fetchGroupByGroupId(groupId);
     }
   }, [groupId, fetchGroupByGroupId]);
+
+  useEffect(() => {
+    // Fetch group members' details
+    const fetchGroupMembers = async () => {
+      if (groups?.memberId?.length > 0) {
+        const membersData = await Promise.all(
+          groups.memberId.map(async (memberId) => {
+            const userRef = doc(db, "Users", memberId);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+              return { id: memberId, ...userSnap.data() };
+            }
+            return null;
+          })
+        );
+        setGroupMembers(membersData.filter((member) => member !== null));
+      }
+    };
+
+    fetchGroupMembers();
+  }, [groups]);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -57,13 +70,15 @@ function Groups() {
 
     try {
       await joinGroup(currentUser.uid, groupId, groups.members);
-      alert("You have successfully joined the group!");
-      // Re-fetch group data and membership status
-      //I do this so that after someone joins, the page refreshes itself
+      toast.success("You have successfully joined the Group!!", {
+        position: "top-center",
+      });
       await fetchGroupByGroupId(groupId);
-    } catch (error) {
-      console.error("Failed to join group:", error);
-      alert("Error: Unable to join the group.");
+    } catch (err) {
+      console.error("Failed to join group:", err);
+      toast.error(err.message, {
+        position: "bottom-center",
+      });
     }
   };
 
@@ -75,14 +90,34 @@ function Groups() {
 
     try {
       await leaveGroup(groupId, currentUser.uid, groups.members);
-      alert("You have successfully left the group!");
-      groups.members = groups.members - 1;
-
-      // Re-fetch group data or update local state
+      toast.success("You have successfully left the Group!!", {
+        position: "top-center",
+      });
       await fetchGroupByGroupId(groupId);
+    } catch (err) {
+      console.error("Failed to leave group:", err);
+      toast.error(err.message, {
+        position: "bottom-center",
+      });
+    }
+  };
+
+  const handleDeleteGroup = async (groupId) => {
+    if (!window.confirm("Are you sure you want to delete this group?")) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "Groups", groupId));
+      toast.success("Group deleted successfully!", {
+        position: "top-center",
+      });
+      navigate("/feed");
     } catch (error) {
-      console.error("Failed to leave group:", error);
-      alert("Error: Unable to leave the group.");
+      console.error("Error deleting group:", error);
+      toast.error("Failed to delete group.", {
+        position: "bottom-center",
+      });
     }
   };
 
@@ -92,16 +127,31 @@ function Groups() {
       <div className="group-container">
         {/* Group Header */}
         <div className="group-header">
-          <div className="group-banner"></div>
-          <div className="group-info">
+          <div className="group-banner">
             <img
-              src={groups?.photoURL}
-              alt="Group Avatar"
+              src={groups?.photoURL || "https://via.placeholder.com/1200x200"}
+              alt="Group Banner"
               className="group-avatar"
             />
+          </div>
+          <div className="group-info">
             <h2>{groups.name}</h2>
-            <p>Group · {groups.members} Members</p>
-            {isMember ? (
+            {groupCreator ? (
+              <>
+                <button
+                  className="edit-btn"
+                  onClick={() => navigate(`/edit-group-profile/${groupId}`)}
+                >
+                  Edit Group
+                </button>
+                <button
+                  className="leave-btn"
+                  onClick={() => handleDeleteGroup(groupId)}
+                >
+                  Delete Group
+                </button>
+              </>
+            ) : isMember ? (
               <button className="leave-btn" onClick={handleLeaveButton}>
                 Leave Group
               </button>
@@ -113,80 +163,66 @@ function Groups() {
           </div>
         </div>
 
-        {/* Action Bar */}
-        <div className="group-action-bar">
-          {groupCreator ? (
-            <button className="edit-btn">Edit Group</button>
-          ) : isMember ? (
-            <div className="group-content">
-              <aside className="group-sidebar">
-                <div className="about-section">
-                  <h3>About</h3>
-                  <p>{groups.description}</p>
+        {/* Group Content */}
+        <div className="group-content">
+          {isMember ? (
+            <div className="group-sidebar">
+              {/* Sidebar Content */}
+              <div className="about-section">
+                <h3>About</h3>
+                <p>{groups.description}</p>
+              </div>
+              <div className="stats-section">
+                <div className="stat-item">
+                  <strong>Members: {groups.members}</strong>
                 </div>
-                <div className="stats-section">
-                  <div className="stat-item">
-                    <strong>{groups.members}</strong>
-                    <span>Members</span>
-                  </div>
-                  <div className="stat-item">
-                    <strong>45</strong>
-                    <span>Posts Today</span>
-                  </div>
-                </div>
-                <div className="members-section">
-                  <h3>Members</h3>
-                  <div className="member">
-                    <img
-                      src="https://via.placeholder.com/50"
-                      alt="Member 1"
-                      className="member-pic"
-                    />
-                    <p>Jane Smith</p>
-                  </div>
-                  <div className="member">
-                    <img
-                      src="https://via.placeholder.com/50"
-                      alt="Member 2"
-                      className="member-pic"
-                    />
-                    <p>John Doe</p>
-                  </div>
-                  <a href="#" className="view-more">
-                    View All Members
-                  </a>
-                </div>
-              </aside>
-
-              <section className="group-main-section">
-                <PostCreator />
-                <h3>Posts</h3>
-                <PostList posts={posts} />
-              </section>
+              </div>
+              <div className="members-section">
+                {groupMembers.length > 0 ? (
+                  groupMembers.map((member) => (
+                    <div key={member.id} className="member">
+                      <img
+                        src={
+                          member.photoURL || "https://via.placeholder.com/50"
+                        }
+                        alt={member.name || "Unknown"}
+                        className="member-pic"
+                      />
+                      <p>{member.name || "Unknown User"}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p>No members to display.</p>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="group-content">
+            <div className="group-sidebar">
               <h3>You need to join the group to participate</h3>
-              <aside className="group-sidebar">
-                <div className="about-section">
-                  <h3>About</h3>
-                  <p>{groups.description}</p>
+              <div className="about-section">
+                <h3>About</h3>
+                <p>{groups.description}</p>
+              </div>
+              <div className="stats-section">
+                <div className="stat-item">
+                  <strong>{groups.members}</strong>
+                  <span>Members</span>
                 </div>
-                <div className="stats-section">
-                  <div className="stat-item">
-                    <strong>{groups.members}</strong>
-                    <span>Members</span>
-                  </div>
-                  <div className="stat-item">
-                    <strong>45</strong>
-                    <span>Posts Today</span>
-                  </div>
-                </div>
-              </aside>
+              </div>
             </div>
+          )}
+
+          {/* Main Section */}
+          {isMember && (
+            <section className="group-main-section">
+              <PostCreator contextType="Group" contextId={groupId} />
+              <h3>Posts</h3>
+              <PostList contextType="Group" contextId={groupId} />
+            </section>
           )}
         </div>
       </div>
+      <ToastContainer />
     </>
   );
 }

@@ -40,11 +40,10 @@ const NotificationList = ({ notifications }) => {
 
   const handleNotificationClick = (notification) => {
     alert(`You clicked on: ${notification.title}`);
-    // Add further handling logic here, e.g., marking as read
   };
 
   const handleViewAllClick = () => {
-    navigate("/notifications"); // Redirects to the notifications page
+    navigate("/notifications");
   };
 
   return (

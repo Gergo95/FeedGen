@@ -1,85 +1,105 @@
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useGroups } from "../../context/GroupContext";
-import "../../styles/components/GroupsCreator.css";
+import "../../styles/components/Creator.css";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { storage } from "../../firebase/firebaseConfig";
+
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const GroupCreator = () => {
   const { createGroup } = useGroups();
   const { currentUser } = useAuth();
-  const navigate = useNavigate();
 
-  const [groupData, setGroupData] = useState({
-    name: "",
-    description: "",
-  });
-  const [groupImage, setGroupImage] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const [description, setDescription] = useState("");
+  const [profilePicture, setProfilePicture] = useState(null);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setGroupData({ ...groupData, [name]: value });
-  };
+  const [loading, setLoading] = useState(false);
 
-  const handleImageChange = (e) => {
-    setGroupImage(e.target.files[0]);
+  const handleFileUpload = async (file) => {
+    if (!file) return null;
+
+    const storageRef = ref(storage, `groupProfiles/${file.name}`);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+    console.log("Current User:", currentUser);
 
-    try {
-      await createGroup(groupData, groupImage, currentUser.uid);
-      setGroupData({ name: "", description: "" });
-      setGroupImage(null);
-      toast.success("Group Created Successfully!!", {
+    e.preventDefault();
+    if (!groupName || !description) {
+      toast.error("Group name and description are required.", {
         position: "top-center",
       });
-      navigate("/feed");
+      return;
+    }
+
+    if (!currentUser || !currentUser.uid) {
+      toast.error("User not authenticated. Please log in.", {
+        position: "top-center",
+      });
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const profilePicUrl = profilePicture
+        ? await handleFileUpload(profilePicture)
+        : null;
+
+      await createGroup({
+        name: groupName,
+        description,
+        photoURL: profilePicUrl || null,
+        createdBy: currentUser.uid,
+        createdAt: new Date().toISOString(),
+        memberId: [uid], // Initialize membersId with the current user
+        members: 1, // Set initial members count to 1
+      });
+
+      toast.success("Group created successfully!", {
+        position: "top-center",
+      });
+      setGroupName("");
+      setDescription("");
+      setProfilePicture(null);
     } catch (error) {
       toast.error(error.message, {
         position: "bottom-center",
       });
-    } finally {
-      setIsLoading(false);
     }
+
+    setLoading(false);
   };
 
   return (
-    <div className="group-creator-container">
-      <h2>Create a New Group</h2>
-      <form onSubmit={handleSubmit} className="group-creator-form">
+    <div className="creator-container">
+      <h2>Create a Group</h2>
+      <form className="creator-form" onSubmit={handleSubmit}>
         <input
           type="text"
-          name="name"
-          value={groupData.name}
-          onChange={handleChange}
+          value={groupName}
+          onChange={(e) => setGroupName(e.target.value)}
           placeholder="Group Name"
           required
-          className="group-input"
         />
         <textarea
-          name="description"
-          value={groupData.description}
-          onChange={handleChange}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Group Description"
           required
-          className="group-textarea"
         ></textarea>
         <input
           type="file"
+          onChange={(e) => setProfilePicture(e.target.files[0])}
           accept="image/*"
-          onChange={handleImageChange}
-          className="group-file-input"
         />
-        <button
-          type="submit"
-          className="group-submit-button"
-          disabled={isLoading}
-        >
-          {isLoading ? "Creating..." : "Create Group"}
+        <button type="submit" className="creator-button" disabled={loading}>
+          {loading ? "Creating..." : "Create Group"}
         </button>
       </form>
     </div>

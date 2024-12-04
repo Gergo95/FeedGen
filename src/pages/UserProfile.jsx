@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../styles/components/UserProfile.css";
 import Navbar from "../components/Navbar";
 import { auth, db } from "../firebase/firebaseConfig";
-import { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -15,10 +14,11 @@ import {
   addDoc,
   deleteDoc,
   getDocs,
+  onSnapshot,
+  orderBy,
 } from "firebase/firestore";
 import { usePosts } from "../context/PostContext";
 import PostList from "../components/Post/PostList";
-import ListMyPosts from "../components/Post/ListMyPosts";
 import UserProfileEditor from "../components/UserProfile/UserProfileEditor";
 import { useUserProf } from "../context/UserProfileContext";
 
@@ -26,7 +26,7 @@ const UserProfile = () => {
   const [activeTab, setActiveTab] = useState("about");
   const { currentUser } = useAuth(); //we get the current user.
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = useState(true);
   const { uid } = useParams();
   const [isFriend, setIsFriend] = useState(false);
   const [friends, setFriends] = useState([]);
@@ -37,6 +37,11 @@ const UserProfile = () => {
   const [friendRequestReceived, setFriendRequestReceived] = useState(false);
   const [myFriends, setMyFriends] = useState([]);
   const { fetchFriends } = useUserProf();
+
+  const [groups, setGroups] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [pages, setPages] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(true);
 
   useEffect(() => {
     console.log("UserProfile useEffect called for friends");
@@ -60,16 +65,26 @@ const UserProfile = () => {
   useEffect(() => {
     // Fetch user data after login
     const fetchData = async () => {
-      console.log(uid);
-      const data = await fetchUserData(uid);
-      setUserData(data);
-      console.log(data);
+      console.log("Fetching data for UID:", uid);
+      try {
+        const data = await fetchUserData(uid);
+        setUserData(data);
+        console.log("Fetched User Data:", data);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
     };
     fetchData();
-  }, [uid]); // Run once when component mounts
+  }, [uid, fetchUserData]);
 
   useEffect(() => {
     const checkFriendshipStatus = async () => {
+      if (!uid || !currentUser) {
+        console.log("UID or currentUser is missing");
+        setLoading(false);
+        return;
+      }
+
       const friendshipsRef = collection(db, "Friendships");
       const friendRequestsRef = collection(db, "FriendRequests");
 
@@ -91,7 +106,7 @@ const UserProfile = () => {
         return;
       }
 
-      // Check if a friend request has been sent
+      // Check if a friend request has been sent or received
       const q3 = query(
         friendRequestsRef,
         where("sender", "==", currentUser.uid),
@@ -114,6 +129,91 @@ const UserProfile = () => {
     checkFriendshipStatus();
   }, [uid, currentUser]);
 
+  useEffect(() => {
+    if (!uid) return;
+
+    const groupsRef = collection(db, "Groups");
+    const eventsRef = collection(db, "Events");
+    const pagesRef = collection(db, "Pages");
+
+    // Queries
+    const groupsQuery = query(
+      groupsRef,
+      where("createdBy", "==", uid),
+      orderBy("createdAt", "desc")
+    );
+    const eventsQuery = query(
+      eventsRef,
+      where("creatorId", "==", uid),
+      orderBy("date", "asc")
+    );
+    const pagesQuery = query(
+      pagesRef,
+      where("creatorId", "==", uid),
+      orderBy("createdAt", "desc")
+    );
+
+    // real-time listeners
+    const unsubscribeGroups = onSnapshot(
+      groupsQuery,
+      (snapshot) => {
+        const fetchedGroups = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setGroups(fetchedGroups);
+        console.log("Fetched Groups:", fetchedGroups);
+      },
+      (error) => {
+        console.error("Error fetching groups:", error);
+      }
+    );
+
+    const unsubscribeEvents = onSnapshot(
+      eventsQuery,
+      (snapshot) => {
+        const fetchedEvents = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setEvents(fetchedEvents);
+        console.log("Fetched Events:", fetchedEvents);
+      },
+      (error) => {
+        console.error("Error fetching events:", error);
+      }
+    );
+
+    const unsubscribePages = onSnapshot(
+      pagesQuery,
+      (snapshot) => {
+        const fetchedPages = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setPages(fetchedPages);
+        console.log("Fetched Pages:", fetchedPages);
+      },
+      (error) => {
+        console.error("Error fetching pages:", error);
+      }
+    );
+
+    // Set loading to false after initial fetch
+    const handleInitialLoad = () => {
+      setActivityLoading(false);
+    };
+
+    handleInitialLoad();
+
+    // Cleanup listeners on unmount or uid change
+    return () => {
+      unsubscribeGroups();
+      unsubscribeEvents();
+      unsubscribePages();
+    };
+  }, [uid]);
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   };
@@ -127,6 +227,7 @@ const UserProfile = () => {
         timestamp: new Date(),
       });
       setFriendRequestSent(true);
+      console.log("Friend request sent");
     } catch (error) {
       console.error("Error sending friend request:", error);
     }
@@ -152,6 +253,7 @@ const UserProfile = () => {
       const requestSnapshot = await getDocs(q);
       if (!requestSnapshot.empty) {
         await deleteDoc(requestSnapshot.docs[0].ref);
+        console.log("Friend request accepted and deleted");
       }
 
       setIsFriend(true);
@@ -172,6 +274,7 @@ const UserProfile = () => {
       const requestSnapshot = await getDocs(q);
       if (!requestSnapshot.empty) {
         await deleteDoc(requestSnapshot.docs[0].ref);
+        console.log("Friend request cancelled and deleted");
       }
       setFriendRequestSent(false);
     } catch (error) {
@@ -179,10 +282,8 @@ const UserProfile = () => {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-
   //I get the visited user's ID from the URL, and compare it to the logged in.
-  //If they are not friends,(which we will check above this), we add them.
+  //If they are not friends, we add them.
   const handleAddFriend = async () => {
     try {
       const friendshipsRef = collection(db, "Friendships");
@@ -192,6 +293,7 @@ const UserProfile = () => {
         timestamp: new Date(),
       });
       setIsFriend(true);
+      console.log("Friend added");
     } catch (error) {
       console.error("Error adding friend:", error);
     }
@@ -220,13 +322,16 @@ const UserProfile = () => {
       if (friendshipDoc) {
         await deleteDoc(friendshipDoc.ref);
         setIsFriend(false);
+        console.log("Friendship deleted");
+      } else {
+        console.log("Friendship document not found");
       }
     } catch (error) {
       console.error("Error deleting friend:", error);
     }
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading || activityLoading) return <p>Loading...</p>;
 
   const handleEditProfile = () => {
     navigate(`/edit-user-profile/${currentUser.uid}`);
@@ -332,13 +437,13 @@ const UserProfile = () => {
           {activeTab === "about" && (
             <div className="about-section">
               <h2>About</h2>
-              <p>{uid?.about}</p>
+              <p>{userData?.about}</p>
               <ul>
-                <li>Profession: {uid?.job}</li>
-                <li>Relationship status: {uid?.relationshipStatus}</li>
-                <li>School: {uid?.school}</li>
-                <li>Gender: {uid?.gender}</li>
-                <li>Date of Birth: {uid?.dob}</li>
+                <li>Profession: {userData?.job}</li>
+                <li>Relationship Status: {userData?.relationshipStatus}</li>
+                <li>School: {userData?.school}</li>
+                <li>Gender: {userData?.gender}</li>
+                <li>Date of Birth: {userData?.dob}</li>
               </ul>
             </div>
           )}
@@ -346,36 +451,118 @@ const UserProfile = () => {
             <div className="friends-section">
               <h2>Friends</h2>
               <div className="friends-list">
-                {myFriends.map((friend) => (
-                  <div
-                    key={friend.id}
-                    className="friend-card"
-                    onClick={() => navigate(`/user/${friend.id}`)}
-                  >
-                    <img
-                      src={friend.photoURL || "https://via.placeholder.com/100"}
-                      alt="friend"
-                    />
-                    <p>{friend.name || "Unknown User"}</p>
-                  </div>
-                ))}
+                {myFriends.length > 0 ? (
+                  myFriends.map((friend) => (
+                    <div
+                      key={friend.id}
+                      className="friend-card"
+                      onClick={() => navigate(`/user/${friend.id}`)}
+                    >
+                      <img
+                        src={
+                          friend.photoURL || "https://via.placeholder.com/100"
+                        }
+                        alt="friend"
+                      />
+                      <p>{friend.name || "Unknown User"}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p>No friends to display.</p>
+                )}
               </div>
             </div>
           )}
           {activeTab === "photos" && (
-            <div className="photos-section">
+            <div className="activity-section">
               <h2>Activity</h2>
-              <div className="photos-grid">
-                <img src="https://via.placeholder.com/200" alt="Photo 1" />
-                <img src="https://via.placeholder.com/200" alt="Photo 2" />
-                <img src="https://via.placeholder.com/200" alt="Photo 3" />
+
+              {/* Groups */}
+              <div className="activity-subsection">
+                <h3>Groups Created</h3>
+                {groups.length > 0 ? (
+                  <div className="activity-list">
+                    {groups.map((group) => (
+                      <div
+                        key={group.id}
+                        className="activity-card"
+                        onClick={() => navigate(`/group-profile/${group.id}`)}
+                      >
+                        <img
+                          src={
+                            group.photoURL || "https://via.placeholder.com/100"
+                          }
+                          alt={group.name}
+                          className="activity-image"
+                        />
+                        <p>{group.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p>No groups created.</p>
+                )}
+              </div>
+
+              {/* Events */}
+              <div className="activity-subsection">
+                <h3>Events Created</h3>
+                {events.length > 0 ? (
+                  <div className="activity-list">
+                    {events.map((event) => (
+                      <div
+                        key={event.id}
+                        className="activity-card"
+                        onClick={() => navigate(`/events/${event.id}`)}
+                      >
+                        <img
+                          src={
+                            event.photoURL || "https://via.placeholder.com/100"
+                          }
+                          alt={event.name}
+                          className="activity-image"
+                        />
+                        <p>{event.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p>No events created.</p>
+                )}
+              </div>
+
+              {/* Pages */}
+              <div className="activity-subsection">
+                <h3>Pages Created</h3>
+                {pages.length > 0 ? (
+                  <div className="activity-list">
+                    {pages.map((page) => (
+                      <div
+                        key={page.id}
+                        className="activity-card"
+                        onClick={() => navigate(`/pages/${page.id}`)}
+                      >
+                        <img
+                          src={
+                            page.photoURL || "https://via.placeholder.com/100"
+                          }
+                          alt={page.name}
+                          className="activity-image"
+                        />
+                        <p>{page.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p>No pages created.</p>
+                )}
               </div>
             </div>
           )}
           {activeTab === "posts" && (
             <div className="posts-section">
               <h2>Posts</h2>
-              <ListMyPosts />
+              <PostList userId={uid} />
             </div>
           )}
         </div>

@@ -1,5 +1,10 @@
 import { db, storage } from "../firebase/firebaseConfig";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import {
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  uploadBytes,
+} from "firebase/storage";
 import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   collection,
@@ -15,13 +20,11 @@ import {
   where,
   setDoc,
 } from "firebase/firestore";
-import { useAuth } from "./AuthContext"; // Import your authentication context
+import { useAuth } from "./AuthContext";
 import { useParams } from "react-router-dom";
 
-// Create the PostContext
 const UserProfContext = createContext();
 
-// Custom hook to use the PostContext
 export const useUserProf = () => useContext(UserProfContext);
 
 const UserProfileProvider = ({ children }) => {
@@ -45,9 +48,31 @@ const UserProfileProvider = ({ children }) => {
 
   // Upload profile image to Firebase Storage
   const uploadProfileImage = async (uid, file) => {
-    const storageRef = ref(storage, `profile_images/${uid}`);
-    await uploadBytes(storageRef, file);
-    return storageRef;
+    if (!uid) throw new Error("User ID is missing");
+    if (!file) throw new Error("No file provided");
+
+    // Generate a unique file name to prevent overwriting
+    const timestamp = Date.now();
+    const fileExtension = file.name.split(".").pop();
+    const fileName = `profile_${timestamp}.${fileExtension}`;
+
+    // Create a storage reference including the file name
+    const storageRef = ref(storage, `profile_images/${uid}/${fileName}`);
+
+    try {
+      // Upload the file
+      const snapshot = await uploadBytes(storageRef, file);
+      console.log("Uploaded a blob or file!", snapshot);
+
+      // Get the download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      console.log("File available at", downloadURL);
+
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    }
   };
 
   const fetchFriends = async (userId) => {
@@ -81,7 +106,6 @@ const UserProfileProvider = ({ children }) => {
     }
   };
 
-  // Provide posts and CRUD functions to the app
   const value = {
     getUserData,
     updateUserData,

@@ -24,6 +24,10 @@ import { useAuth } from "./context/AuthContext";
 import UserProfileEditor from "./components/UserProfile/UserProfileEditor";
 import UserProfileProvider from "./context/UserProfileContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import EventEditor from "./components/Events/EventEditor";
+import PagesEditor from "./components/Pages/PagesEditor";
+import GroupsEditor from "./components/Groups/GroupsEditor";
+import PostViewer from "./pages/PostViewer";
 function App() {
   return (
     <BrowserRouter>
@@ -39,7 +43,6 @@ function App() {
                         <UserProfileProvider>
                           <Routes>
                             {/* Public Routes */}
-                            <Route path="/login" element={<Login />} />
                             <Route path="/signup" element={<SignUp />} />
                             <Route path="/home" element={<Home />} />
 
@@ -68,6 +71,35 @@ function App() {
                                 </ProtectedRoute>
                               }
                             />
+                            <Route
+                              path="/edit-event-profile/:eventId"
+                              element={
+                                <ProtectedRoute>
+                                  <EventEditor />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/edit-page-profile/:pageId"
+                              element={
+                                <ProtectedRoute>
+                                  <PagesEditor />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/edit-group-profile/:groupId"
+                              element={
+                                <ProtectedRoute>
+                                  <GroupsEditor />
+                                </ProtectedRoute>
+                              }
+                            />
+                            <Route
+                              path="/posts/:postId"
+                              element={<PostViewer />}
+                            />
+
                             <Route
                               path="/user/:uid"
                               element={

@@ -51,18 +51,44 @@ const FilterPagePost = () => {
 
   const fetchPosts = async (categories) => {
     try {
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+        console.error("User not logged in");
+        return;
+      }
+
+      // Fetch pages followed by the logged-in user
+      const pagesCollection = collection(db, "Pages");
+      const pagesQuery = query(
+        pagesCollection,
+        where("followersId", "array-contains", userId)
+      );
+      const pagesSnapshot = await getDocs(pagesQuery);
+
+      const followedPageIds = pagesSnapshot.docs.map((doc) => doc.id);
+
+      if (followedPageIds.length === 0) {
+        setPosts([]);
+        return; // No followed pages, no posts to fetch
+      }
+
+      // Fetch posts only from followed pages and apply category filter
       const postsCollection = collection(db, "PagePosts");
       let q;
 
       if (categories.length > 0) {
-        // Use 'in' operator to match any of the selected categories
         q = query(
           postsCollection,
+          where("pageId", "in", followedPageIds),
           where("category", "in", categories),
           orderBy("createdAt", "desc")
         );
       } else {
-        q = query(postsCollection, orderBy("createdAt", "desc"));
+        q = query(
+          postsCollection,
+          where("pageId", "in", followedPageIds),
+          orderBy("createdAt", "desc")
+        );
       }
 
       const querySnapshot = await getDocs(q);
@@ -127,8 +153,8 @@ const FilterPagePost = () => {
     if (!userId) return; // Ensure the user is logged in
 
     try {
-      const postRef = doc(db, "PagePosts", postId); // Reference to the post
-      const postSnapshot = await getDoc(postRef); // Fetch the single document
+      const postRef = doc(db, "PagePosts", postId);
+      const postSnapshot = await getDoc(postRef);
 
       if (!postSnapshot.exists()) {
         console.error("Post not found");
@@ -150,7 +176,6 @@ const FilterPagePost = () => {
           likes: arrayRemove(userId),
         });
 
-        // Optimistic UI update
         setPosts((prevPosts) =>
           prevPosts.map((post) =>
             post.id === postId
@@ -167,7 +192,6 @@ const FilterPagePost = () => {
           likes: arrayUnion(userId),
         });
 
-        // Optimistic UI update
         setPosts((prevPosts) =>
           prevPosts.map((post) =>
             post.id === postId

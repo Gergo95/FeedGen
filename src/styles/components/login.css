@@ -1,20 +1,13 @@
 .login-container {
   margin: 0;
   font-family: "Poppins", sans-serif;
-  /* Eltávolítva a display: flex és a magasság beállításokat */
-  /* display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh; */
   color: #333;
-  /* Hozzáadva padding a tartalom elválasztásához */
   padding: 1rem 0;
 }
 
 .login-page {
   width: 100%;
   max-width: 400px;
-  /* Középre igazítás */
   margin: 0 auto;
   padding: 0 20px;
 }
@@ -22,7 +15,7 @@
 .login-card {
   background: white;
   border-radius: 15px;
-  padding: 20px; /* Csökkentve a padding-et */
+  padding: 20px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
@@ -36,11 +29,11 @@
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* Csökkentve a gap-et */
+  gap: 10px;
 }
 
 .login-form input {
-  padding: 10px; /* Csökkentve a padding-et */
+  padding: 10px;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
@@ -54,14 +47,14 @@
 
 .login-button {
   width: 100%;
-  padding: 0.6rem; /* Csökkentve a padding-et */
+  padding: 0.6rem;
   background-color: var(--main-color);
   border: none;
   color: var(--secondary-color);
   font-size: 1rem;
   border-radius: var(--border-radius);
   cursor: pointer;
-  margin-top: 0.8rem; /* Csökkentve a margót */
+  margin-top: 0.8rem;
   transition: background 0.3s;
 }
 
@@ -70,7 +63,7 @@
 }
 
 .divider {
-  margin: 15px 0; /* Csökkentve a margót */
+  margin: 15px 0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -94,7 +87,7 @@
   gap: 10px;
   background: white;
   border: 1px solid #ddd;
-  padding: 8px; /* Csökkentve a padding-et */
+  padding: 8px;
   border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
@@ -112,7 +105,7 @@
 }
 
 .switch-form p {
-  margin-top: 15px; /* Csökkentve a margót */
+  margin-top: 15px;
   font-size: 0.9rem;
 }
 

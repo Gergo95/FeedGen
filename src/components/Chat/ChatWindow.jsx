@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from "react";
-
 import {
   collection,
   query,
   where,
   orderBy,
-  getDocs,
+  onSnapshot,
   addDoc,
   serverTimestamp,
 } from "firebase/firestore";
-
 import { TextField, Button, Typography, Box } from "@mui/material";
-import { useChat } from "../../context/ChatContext";
 import { db } from "../../firebase/firebaseConfig";
 import "../../styles/components/ChatWindow.css";
 
@@ -19,43 +16,46 @@ const ChatWindow = ({ friend, currentUser, closeChat }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
-  // Fetch messages from Firestore
+  // Listen for real-time updates
   useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        // Query Firestore for messages between currentUser and friend
-        const messagesQuery = query(
-          collection(db, "Messages"),
-          where("senderId", "in", [currentUser.uid, friend.uid]),
-          where("receiverId", "in", [currentUser.uid, friend.uid]),
-          orderBy("timestamp", "asc")
-        );
-        const querySnapshot = await getDocs(messagesQuery);
-        const fetchedMessages = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+    if (!friend || !currentUser) return;
 
-        console.log("Fetched messages:", fetchedMessages); // Debugging log to check if messages are fetched correctly
-        setMessages(fetchedMessages); // Update state with fetched messages
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-      }
-    };
+    const messagesQuery = query(
+      collection(db, "Messages"),
+      where("senderId", "in", [currentUser.uid, friend.uid]),
+      where("receiverId", "in", [currentUser.uid, friend.uid]),
+      orderBy("timestamp", "asc")
+    );
 
-    fetchMessages(); // Fetch messages when component mounts or when friend/currentUser changes
-  }, [friend, currentUser]); // Re-fetch messages if friend or currentUser changes
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      const fetchedMessages = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      console.log("Fetched messages (real-time):", fetchedMessages);
+      setMessages(fetchedMessages);
+    });
+
+    // Cleanup listener on unmount or when friend/currentUser changes
+    return () => unsubscribe();
+  }, [friend, currentUser]);
+
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
-    await addDoc(collection(db, "Messages"), {
-      senderId: currentUser.uid,
-      receiverId: friend.uid,
-      content: newMessage,
-      timestamp: serverTimestamp(),
-    });
+    try {
+      await addDoc(collection(db, "Messages"), {
+        senderId: currentUser.uid,
+        receiverId: friend.uid,
+        content: newMessage,
+        timestamp: serverTimestamp(),
+      });
 
-    setNewMessage("");
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   return (
@@ -74,9 +74,9 @@ const ChatWindow = ({ friend, currentUser, closeChat }) => {
       {/* Message Display Section */}
       <Box style={styles.messageContainer}>
         {messages.length > 0 ? (
-          messages.map((msg, index) => (
+          messages.map((msg) => (
             <Typography
-              key={index}
+              key={msg.id} // Use Firestore `id` as unique key
               align={msg.senderId === currentUser.uid ? "right" : "left"}
               style={
                 msg.senderId === currentUser.uid

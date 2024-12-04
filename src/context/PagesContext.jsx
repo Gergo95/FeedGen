@@ -33,6 +33,25 @@ const PageProvider = ({ children }) => {
     }
   };
 
+  const fetchPagesYouFollow = async (userId) => {
+    try {
+      const pageRef = collection(db, "Pages");
+      //  check if the userId is in the followersId array
+      const q = query(pageRef, where("followersId", "array-contains", userId));
+      const querySnapshot = await getDocs(q);
+
+      const pages = [];
+      querySnapshot.forEach((doc) => {
+        pages.push({ id: doc.id, ...doc.data() });
+      });
+
+      return pages;
+    } catch (error) {
+      console.error("Error fetching pages:", error);
+      throw error;
+    }
+  };
+
   const fetchPagesByUser = async (userId) => {
     try {
       const pageRef = collection(db, "Pages");
@@ -54,10 +73,10 @@ const PageProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const pageRef = doc(db, "Pages", pageId); // Reference to the group document
-      const pageDoc = await getDoc(pageRef); // Fetch the document
+      const pageRef = doc(db, "Pages", pageId);
+      const pageDoc = await getDoc(pageRef);
       if (pageDoc.exists()) {
-        setPages(pageDoc.data()); // If document exists, set group data
+        setPages(pageDoc.data());
       } else {
         setError("Group not found");
       }
@@ -88,6 +107,30 @@ const PageProvider = ({ children }) => {
     }
   };
 
+  // Update event data
+  const updatePageData = async (pageId, updatedData) => {
+    try {
+      const pageRef = doc(db, "Pages", pageId);
+      await updateDoc(pageRef, updatedData);
+    } catch (error) {
+      console.error("Error updating page data:", error);
+      throw error;
+    }
+  };
+
+  // Upload event image and get download URL
+  const uploadPageImage = async (pageId, file) => {
+    try {
+      const storageRef = ref(storage, `pages/${pageId}/photo`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading page image:", error);
+      throw error;
+    }
+  };
+
   const unfollowPage = async (pageId, userId, followers) => {
     if (!pageId || !userId) {
       console.log("Page ID or User ID is missing.");
@@ -111,7 +154,7 @@ const PageProvider = ({ children }) => {
       // Update the group document
       await updateDoc(pageRef, {
         followersId: updatedFollowersId,
-        followers: followers - 1,
+        followers: updatedFollowersId.length,
       });
 
       console.log("User successfully unfollowed the page.");
@@ -129,6 +172,9 @@ const PageProvider = ({ children }) => {
         fetchPageByPageId,
         followPage,
         unfollowPage,
+        fetchPagesYouFollow,
+        uploadPageImage,
+        updatePageData,
       }}
     >
       {children}

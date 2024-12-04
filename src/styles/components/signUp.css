@@ -1,7 +1,7 @@
 .sign-up-page {
   margin: 0;
   font-family: "Poppins", sans-serif;
-  background: linear-gradient(to right, rgb(182, 244, 146), rgb(51, 139, 147));
+  background: linear-gradient(to right, var(--main-color), #a8e063);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -26,7 +26,7 @@
 .auth-card h1 {
   margin-bottom: 10px;
   font-size: 2rem;
-  color: rgb(51, 139, 147);
+  color: #2ecc71;
 }
 
 .auth-message {
@@ -54,18 +54,20 @@
 }
 
 .auth-button {
-  background-color: rgb(51, 139, 147);
-  color: white;
+  width: 100%;
+  padding: 0.8rem;
+  background-color: var(--main-color);
   border: none;
-  padding: 12px;
-  border-radius: 8px;
+  color: var(--secondary-color);
   font-size: 1rem;
+  border-radius: var(--border-radius);
   cursor: pointer;
-  transition: background-color 0.3s;
+  margin-top: 0.8rem;
+  transition: background 0.3s;
 }
 
 .auth-button:hover {
-  background-color: #097969;
+  background-color: #27ae60;
 }
 
 .switch-form p {

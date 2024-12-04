@@ -1,5 +1,3 @@
-// PostList.jsx
-
 import React, { useState, useEffect } from "react";
 import "../../styles/components/post.css";
 import { FiThumbsUp } from "react-icons/fi";
@@ -7,144 +5,326 @@ import AddComment from "../Comment/AddComment";
 import { usePosts } from "../../context/PostContext";
 import { useComments } from "../../context/CommentContext";
 import { useAuth } from "../../context/AuthContext";
+import { toast, ToastContainer } from "react-toastify";
+
 import { useNavigate } from "react-router-dom";
 import {
   collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
   query,
   where,
   orderBy,
+  onSnapshot,
+  getDocs,
+  doc,
+  getDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
 
-const PostList = () => {
-  const [showComments, setShowComments] = useState({});
+const PostList = ({ contextType, contextId, userId, feed }) => {
+  const [posts, setPosts] = useState([]);
   const [comments, setComments] = useState({});
+  const [showComments, setShowComments] = useState({});
+  const [loading, setLoading] = useState(true);
   const { toggleLikePost } = usePosts();
   const { fetchCommentsByPostId } = useComments();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // Helper function to chunk arrays
+  const chunkArray = (array, size) => {
+    const result = [];
+    const arrayCopy = [...array];
+    while (arrayCopy.length) {
+      result.push(arrayCopy.splice(0, size));
+    }
+    return result;
+  };
+
+  // Function to fetch friend IDs
+  const getFriendIds = async (uid) => {
+    try {
+      const friendshipsRef = collection(db, "Friendships");
+
+      // Fetch friendships where currentUserUid is either user1 or user2
+      const friendshipsQuery1 = query(
+        friendshipsRef,
+        where("user1", "==", uid)
+      );
+      const friendshipsQuery2 = query(
+        friendshipsRef,
+        where("user2", "==", uid)
+      );
+
+      const [snapshot1, snapshot2] = await Promise.all([
+        getDocs(friendshipsQuery1),
+        getDocs(friendshipsQuery2),
+      ]);
+
+      const friendIdsSet = new Set();
+
+      // Collect friend UIDs
+      snapshot1.forEach((doc) => {
+        const data = doc.data();
+        friendIdsSet.add(data.user2);
+      });
+      snapshot2.forEach((doc) => {
+        const data = doc.data();
+        friendIdsSet.add(data.user1);
+      });
+
+      // Include current user's UID to display their own posts in feed
+      friendIdsSet.add(uid);
+
+      const friendIds = Array.from(friendIdsSet);
+      return friendIds;
+    } catch (error) {
+      console.error("Error fetching friend IDs:", error);
+      return [];
+    }
+  };
 
   useEffect(() => {
     if (!currentUser) return;
 
-    let unsubscribeFunctions = [];
-    let postsMap = new Map();
+    const fetchPosts = async () => {
+      let unsubscribeFunctions = [];
 
-    const fetchAndSubscribeToPosts = async () => {
-      try {
-        const friendshipsRef = collection(db, "Friendships");
-
-        // Fetch friendships where currentUserUid is either user1 or user2
-        const friendshipsQuery1 = query(
-          friendshipsRef,
-          where("user1", "==", currentUser.uid)
-        );
-        const friendshipsQuery2 = query(
-          friendshipsRef,
-          where("user2", "==", currentUser.uid)
-        );
-
-        const [snapshot1, snapshot2] = await Promise.all([
-          getDocs(friendshipsQuery1),
-          getDocs(friendshipsQuery2),
-        ]);
-
-        const friendIdsSet = new Set();
-
-        // Collect friend UIDs
-        snapshot1.forEach((doc) => {
-          const data = doc.data();
-          friendIdsSet.add(data.user2);
-        });
-        snapshot2.forEach((doc) => {
-          const data = doc.data();
-          friendIdsSet.add(data.user1);
-        });
-
-        // Include current user's UID
-        friendIdsSet.add(currentUser.uid);
-
-        const friendIds = Array.from(friendIdsSet);
+      if (feed) {
+        console.log("Fetching feed posts for user:", currentUser.uid);
+        const friendIds = await getFriendIds(currentUser.uid);
 
         if (friendIds.length === 0) {
-          console.log("No friends found.");
           setPosts([]);
           setLoading(false);
           return;
         }
 
-        // Handle Firestore limitation of 10 items in 'in' queries
-        const chunks = [];
-        const chunkSize = 10;
+        const chunks = chunkArray(friendIds, 10);
+        let allPostsMap = new Map();
 
-        for (let i = 0; i < friendIds.length; i += chunkSize) {
-          chunks.push(friendIds.slice(i, i + chunkSize));
-        }
-
-        chunks.forEach((chunk) => {
-          const postsQuery = query(
+        for (const chunk of chunks) {
+          const chunkQuery = query(
             collection(db, "Posts"),
             where("uid", "in", chunk),
             orderBy("createdAt", "desc")
           );
 
-          const unsubscribe = onSnapshot(postsQuery, async (snapshot) => {
-            const changes = snapshot.docChanges();
+          const unsubscribe = onSnapshot(chunkQuery, async (snapshot) => {
             let postsChanged = false;
 
-            for (const change of changes) {
+            for (const change of snapshot.docChanges()) {
               const postDoc = change.doc;
               const postData = postDoc.data();
-              const userDoc = await getDoc(doc(db, "Users", postData.uid));
-              const userData = userDoc.exists() ? userDoc.data() : null;
-              const post = {
-                id: postDoc.id,
-                ...postData,
-                user: userData,
-              };
 
-              if (change.type === "added" || change.type === "modified") {
-                postsMap.set(post.id, post);
+              // Exclude context-specific posts to display general feed
+              if (postData.contextType) continue;
+
+              const postId = postDoc.id;
+
+              if (change.type === "removed") {
+                allPostsMap.delete(postId);
                 postsChanged = true;
-              } else if (change.type === "removed") {
-                postsMap.delete(post.id);
+              } else {
+                allPostsMap.set(postId, { id: postId, ...postData });
                 postsChanged = true;
               }
             }
 
             if (postsChanged) {
-              // Update the posts state
-              const allPostsArray = Array.from(postsMap.values());
-              // Sort all posts by createdAt in descending order
-              allPostsArray.sort((a, b) => b.createdAt - a.createdAt);
+              // Fetch unique user IDs from posts
+              const uniqueUserIds = Array.from(
+                new Set(
+                  Array.from(allPostsMap.values()).map((post) => post.uid)
+                )
+              );
+
+              // Fetch user data for all unique user IDs
+              const userDocs = await Promise.all(
+                uniqueUserIds.map((uid) => getDoc(doc(db, "Users", uid)))
+              );
+
+              const userDataMap = new Map();
+              userDocs.forEach((docSnap) => {
+                if (docSnap.exists()) {
+                  userDataMap.set(docSnap.id, docSnap.data());
+                }
+              });
+
+              // Attach user data to posts
+              const allPostsArray = Array.from(allPostsMap.values()).map(
+                (post) => ({
+                  ...post,
+                  user: userDataMap.get(post.uid) || {
+                    name: "Unknown User",
+                    photoURL: "https://via.placeholder.com/50",
+                    uid: post.uid,
+                  },
+                })
+              );
+
+              // Sort posts by createdAt
+              allPostsArray.sort(
+                (a, b) =>
+                  (b.createdAt?.toMillis() || 0) -
+                  (a.createdAt?.toMillis() || 0)
+              );
+
               setPosts(allPostsArray);
+              setLoading(false);
             }
-            setLoading(false);
           });
 
           unsubscribeFunctions.push(unsubscribe);
+        }
+
+        return () => {
+          unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+        };
+      } else if (contextType && contextId) {
+        console.log(`Fetching posts for ${contextType} with ID: ${contextId}`);
+
+        const postsQuery = query(
+          collection(db, "Posts"),
+          where("contextType", "==", contextType),
+          where("contextId", "==", contextId),
+          orderBy("createdAt", "desc")
+        );
+
+        const unsubscribe = onSnapshot(postsQuery, async (snapshot) => {
+          const fetchedPosts = [];
+
+          for (const docSnapshot of snapshot.docs) {
+            const postData = docSnapshot.data();
+
+            // Fetch user data
+            const userDoc = await getDoc(doc(db, "Users", postData.uid));
+            const userData = userDoc.exists() ? userDoc.data() : null;
+
+            fetchedPosts.push({
+              id: docSnapshot.id,
+              ...postData,
+              user: userData || {
+                name: "Unknown User",
+                photoURL: "https://via.placeholder.com/50",
+                uid: postData.uid,
+              },
+            });
+          }
+
+          // Sort posts by createdAt
+          fetchedPosts.sort(
+            (a, b) =>
+              (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0)
+          );
+
+          setPosts(fetchedPosts);
+          setLoading(false);
         });
-      } catch (error) {
-        console.error("Error subscribing to posts:", error);
-        setLoading(false);
+
+        unsubscribeFunctions.push(unsubscribe);
+
+        return () => {
+          unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+        };
+      } else if (userId) {
+        console.log(`Fetching posts for user with ID: ${userId}`);
+
+        const postsQuery = query(
+          collection(db, "Posts"),
+          where("uid", "==", userId),
+          orderBy("createdAt", "desc")
+        );
+
+        const unsubscribe = onSnapshot(postsQuery, async (snapshot) => {
+          const fetchedPosts = [];
+
+          for (const docSnapshot of snapshot.docs) {
+            const postData = docSnapshot.data();
+
+            // Fetch user data
+            const userDoc = await getDoc(doc(db, "Users", postData.uid));
+            const userData = userDoc.exists() ? userDoc.data() : null;
+
+            fetchedPosts.push({
+              id: docSnapshot.id,
+              ...postData,
+              user: userData || {
+                name: "Unknown User",
+                photoURL: "https://via.placeholder.com/50",
+                uid: postData.uid,
+              },
+            });
+          }
+
+          // Sort posts by createdAt
+          fetchedPosts.sort(
+            (a, b) =>
+              (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0)
+          );
+
+          setPosts(fetchedPosts);
+          setLoading(false);
+        });
+
+        unsubscribeFunctions.push(unsubscribe);
+
+        return () => {
+          unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+        };
+      } else {
+        // Default behavior: fetch all posts or handle accordingly
+        console.log("Fetching all posts");
+
+        const postsQuery = query(
+          collection(db, "Posts"),
+          orderBy("createdAt", "desc")
+        );
+
+        const unsubscribe = onSnapshot(postsQuery, async (snapshot) => {
+          const fetchedPosts = [];
+
+          for (const docSnapshot of snapshot.docs) {
+            const postData = docSnapshot.data();
+
+            // Fetch user data
+            const userDoc = await getDoc(doc(db, "Users", postData.uid));
+            const userData = userDoc.exists() ? userDoc.data() : null;
+
+            fetchedPosts.push({
+              id: docSnapshot.id,
+              ...postData,
+              user: userData || {
+                name: "Unknown User",
+                photoURL: "https://via.placeholder.com/50",
+                uid: postData.uid,
+              },
+            });
+          }
+
+          // Sort posts by createdAt
+          fetchedPosts.sort(
+            (a, b) =>
+              (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0)
+          );
+
+          setPosts(fetchedPosts);
+          setLoading(false);
+        });
+
+        unsubscribeFunctions.push(unsubscribe);
+
+        return () => {
+          unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+        };
       }
     };
 
-    fetchAndSubscribeToPosts();
-
-    return () => {
-      // Clean up the listeners
-      unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
-    };
-  }, [currentUser]);
-
-  if (loading) return <p>Loading...</p>;
+    fetchPosts().catch((error) => {
+      console.error("Error fetching posts:", error);
+      setLoading(false);
+    });
+  }, [currentUser, contextType, contextId, userId, feed]);
 
   const handleToggleComments = (postId) => {
     setShowComments((prev) => ({
@@ -152,11 +332,10 @@ const PostList = () => {
       [postId]: !prev[postId],
     }));
 
-    // Fetch comments when comments are toggled on
     if (!showComments[postId]) {
       fetchCommentsByPostId(postId)
         .then((postComments) => {
-          setComments((prev = {}) => ({
+          setComments((prev) => ({
             ...prev,
             [postId]: postComments,
           }));
@@ -167,10 +346,46 @@ const PostList = () => {
     }
   };
 
+  const handleDelete = async (postId) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "Posts", postId));
+      toast.success("Post deleted successfully!", {
+        position: "top-center",
+      });
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      toast.error("Failed to delete post.", {
+        position: "bottom-center",
+      });
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, "Comments", commentId));
+      toast.success("Comment deleted successfully!", {
+        position: "top-center",
+      });
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      toast.error("Failed to delete comment.", {
+        position: "bottom-center",
+      });
+    }
+  };
+
   const handleCommentAdded = async (postId) => {
     try {
       const updatedComments = await fetchCommentsByPostId(postId);
-      setComments((prev = {}) => ({
+      setComments((prev) => ({
         ...prev,
         [postId]: updatedComments,
       }));
@@ -184,6 +399,8 @@ const PostList = () => {
     await toggleLikePost(postId, currentUser.uid, isLiked, "Posts");
   };
 
+  if (loading) return <p>Loading...</p>;
+
   return (
     <div className="post-list">
       {posts.length > 0 ? (
@@ -193,16 +410,20 @@ const PostList = () => {
             <div className="post-header">
               <img
                 src={post.user?.photoURL || "https://via.placeholder.com/50"}
-                alt={"Avatar of the user who created the post."}
+                alt="User Avatar"
                 className="user-avatar"
-                onClick={() => navigate(`/user/${post.user.uid}`)}
+                onClick={() =>
+                  post.user?.uid && navigate(`/user/${post.user.uid}`)
+                }
               />
               <div className="user-info">
                 <h4
-                  onClick={() => navigate(`/user/${post.user.uid}`)}
+                  onClick={() =>
+                    post.user?.uid && navigate(`/user/${post.user.uid}`)
+                  }
                   className="post-user-name"
                 >
-                  {post.user?.name}
+                  {post.user?.name || "Unknown User"}
                 </h4>
                 <p>
                   {post.createdAt
@@ -210,6 +431,15 @@ const PostList = () => {
                     : ""}
                 </p>
               </div>
+              {post.user.uid == currentUser.uid && (
+                <button
+                  className="delete-btn"
+                  onClick={() => handleDelete(post.id)}
+                  aria-label="Delete Post"
+                >
+                  ×
+                </button>
+              )}
             </div>
 
             {/* Post Content */}
@@ -262,15 +492,31 @@ const PostList = () => {
                         }
                         alt="User Avatar"
                         className="comment-user-avatar"
-                        onClick={() => navigate(`/user/${comment.user.uid}`)}
+                        onClick={() =>
+                          comment.user?.uid &&
+                          navigate(`/user/${comment.user.uid}`)
+                        }
                       />
                       <strong
-                        onClick={() => navigate(`/user/${comment.user.uid}`)}
+                        onClick={() =>
+                          comment.user?.uid &&
+                          navigate(`/user/${comment.user.uid}`)
+                        }
                         className="comment-user-name"
                       >
                         {comment.user?.name || "Anonymous"}:
                       </strong>
+
                       <div className="comment-content">{comment.content}</div>
+                      {comment.user.uid == currentUser.uid && (
+                        <button
+                          className="delete-comment-btn"
+                          onClick={() => handleDeleteComment(comment.id)}
+                          aria-label="Delete Comment"
+                        >
+                          ×
+                        </button>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -290,7 +536,7 @@ const PostList = () => {
         ))
       ) : (
         <div className="no-posts-message">
-          <p>No posts to show from you or your friends.</p>
+          <p>No posts to show.</p>
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import "../../styles/components/ChatSidebar.css";
 import {
   collection,
@@ -9,37 +9,36 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
-import { Avatar, List, ListItem, ListItemText, Badge } from "@mui/material";
-import { useAuth } from "../../context/AuthContext";
+import { Avatar, List, ListItemText, Badge, ListItem } from "@mui/material";
 
 const ChatSidebar = ({ currentUser, openChat }) => {
   const [friends, setFriends] = useState([]);
+  const dataFetchedRef = useRef(false); // Track fetch status
 
-  const fetchFriends = async (currentUserId) => {
+  const fetchFriends = useCallback(async (currentUserId) => {
     const friendshipsRef = collection(db, "Friendships");
 
-    // Queries to fetch friendships where current user is user1 or user2
-    const q1 = query(friendshipsRef, where("user1", "==", currentUserId));
-    const q2 = query(friendshipsRef, where("user2", "==", currentUserId));
-
     try {
-      const querySnapshot1 = await getDocs(q1);
-      const querySnapshot2 = await getDocs(q2);
+      // Fetch friendships where the current user is user1 or user2
+      const [querySnapshot1, querySnapshot2] = await Promise.all([
+        getDocs(query(friendshipsRef, where("user1", "==", currentUserId))),
+        getDocs(query(friendshipsRef, where("user2", "==", currentUserId))),
+      ]);
 
-      // Extract friend IDs from both queries
       const friendsFromUser1 = querySnapshot1.docs.map((doc) => ({
         ...doc.data(),
-        friendId: doc.data().user2, // If current user is user1, friend is user2
+        friendId: doc.data().user2,
       }));
+
       const friendsFromUser2 = querySnapshot2.docs.map((doc) => ({
         ...doc.data(),
-        friendId: doc.data().user1, // If current user is user2, friend is user1
+        friendId: doc.data().user1,
       }));
 
       const allFriends = [...friendsFromUser1, ...friendsFromUser2];
       console.log("Combined Friends Data:", allFriends);
 
-      // Fetch full user details for each friend
+      // Fetch full user details
       const userPromises = allFriends.map(async (friend) => {
         const userDoc = await getDoc(doc(db, "Users", friend.friendId));
         return { uid: friend.friendId, ...userDoc.data() };
@@ -52,28 +51,29 @@ const ChatSidebar = ({ currentUser, openChat }) => {
       console.error("Error fetching friends:", error);
       return [];
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser || dataFetchedRef.current) return;
 
     const loadFriends = async () => {
       try {
         console.log("Fetching friends for user:", currentUser.uid);
         const friendsList = await fetchFriends(currentUser.uid);
-        console.log("Fetched friends:", friendsList);
         setFriends(friendsList);
+        console.log("Fetched friends:", friendsList);
+        dataFetchedRef.current = true; // Mark data as fetched
       } catch (error) {
         console.error("Error loading friends:", error);
       }
     };
 
     loadFriends();
-  }, [currentUser]);
+  }, [currentUser, fetchFriends]);
 
   const handleFriendClick = (friend) => {
-    console.log("Friend clicked:", friend); // Log the friend when it's clicked
-    openChat(friend); // Trigger the handleOpenChat function in the parent component
+    console.log("Friend clicked:", friend);
+    openChat(friend);
   };
 
   return (
@@ -82,7 +82,7 @@ const ChatSidebar = ({ currentUser, openChat }) => {
       <List>
         {friends.map((friend) => (
           <ListItem
-            key={friend.uid}
+            key={friend.uid || Math.random()} // Unique key fallback
             button
             onClick={() => handleFriendClick(friend)}
             style={styles.listItem}
@@ -112,7 +112,7 @@ const styles = {
     width: "300px",
     borderLeft: "1px solid #ddd",
     padding: "10px",
-    backgroundColor: "#fafafa", // Lighter background for sidebar
+    backgroundColor: "#fafafa",
     height: "100vh",
     display: "flex",
     flexDirection: "column",

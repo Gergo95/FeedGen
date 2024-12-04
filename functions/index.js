@@ -29,13 +29,11 @@ export const notifyOnFriendRequest = onDocumentCreated(
     const friendRequest = friendRequestSnapshot.data();
     console.log("FriendRequest data:", friendRequest);
 
-    // Use the correct field names
     const recipientId = friendRequest.receiver;
     const senderId = friendRequest.sender;
     console.log("Recipient ID:", recipientId);
     console.log("Sender ID:", senderId);
 
-    // Check if recipientId or senderId is missing
     if (!recipientId || !senderId) {
       console.error("receiver or sender is undefined.");
       return;
@@ -58,7 +56,6 @@ export const notifyOnFriendRequest = onDocumentCreated(
   }
 );
 
-// Notify on Comment
 export const notifyOnComment = onDocumentCreated(
   "Comments/{commentId}",
   async (event) => {
@@ -90,13 +87,11 @@ export const notifyOnComment = onDocumentCreated(
   }
 );
 
-// Notify on Like
 export const notifyOnLike = onDocumentUpdated(
   "Posts/{postId}",
   async (event) => {
     console.log("Trigger fired for Post Likes");
 
-    // Log the full event object
     console.log("Full event object:", JSON.stringify(event));
 
     // Access the before and after snapshots
@@ -155,6 +150,43 @@ export const notifyOnLike = onDocumentUpdated(
       }
     } else {
       console.log("No new like detected.");
+    }
+  }
+);
+
+//Chat
+export const notifyOnNewMessage = onDocumentCreated(
+  "Messages/{messageId}",
+  async (event) => {
+    const newMessageSnapshot = event.data;
+    console.log("Trigger fired Messages");
+
+    console.log("Full event object:", JSON.stringify(event));
+    if (!newMessageSnapshot) {
+      console.error("No data found in the snapshot.");
+
+      return;
+    }
+    const messageRequest = newMessageSnapshot.data();
+    const recipientId = messageRequest.receiverId;
+    const senderId = messageRequest.senderId;
+    console.log("New message data:", newMessageSnapshot);
+
+    if (!recipientId || !senderId) {
+      console.error("recipientId or senderId is undefined.");
+      return;
+    }
+
+    try {
+      await db.collection("Notifications").add({
+        recipientId,
+        senderId,
+        type: "new_message",
+        timestamp: FieldValue.serverTimestamp(),
+        read: false,
+      });
+    } catch (error) {
+      logger.error("Error creating notification for new message: ", error);
     }
   }
 );

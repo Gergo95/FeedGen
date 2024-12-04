@@ -3,7 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { usePages } from "../../context/PagesContext";
 import { storage } from "../../firebase/firebaseConfig";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import "../../styles/components/PageCreator.css";
+import "../../styles/components/Creator.css";
 import { toast } from "react-toastify";
 
 const PageCreator = () => {
@@ -24,6 +24,7 @@ const PageCreator = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!pageName || !about) {
       alert("Page name and About section are required.");
       return;
@@ -36,7 +37,7 @@ const PageCreator = () => {
         ? await handleFileUpload(profilePicture)
         : null;
 
-      const pageData = {
+      await createPage({
         name: pageName,
         about,
         photoURL: profilePicUrl,
@@ -44,13 +45,11 @@ const PageCreator = () => {
         createdAt: new Date().toISOString(),
         followersId: [currentUser.uid],
         followers: [currentUser.uid].length,
-      };
+      });
 
-      await createPage(pageData);
       toast.success("Page created Successfully!!", {
         position: "top-center",
       });
-      setLoading;
       setPageName("");
       setAbout("");
       setProfilePicture(null);
@@ -64,35 +63,28 @@ const PageCreator = () => {
   };
 
   return (
-    <div className="page-creator">
+    <div className="creator-container">
       <h2>Create a Page</h2>
-      <form onSubmit={handleSubmit} className="page-form">
-        <label>
-          Page Name:
-          <input
-            type="text"
-            value={pageName}
-            onChange={(e) => setPageName(e.target.value)}
-            required
-          />
-        </label>
-        <label>
-          About:
-          <textarea
-            value={about}
-            onChange={(e) => setAbout(e.target.value)}
-            required
-          ></textarea>
-        </label>
-        <label>
-          Profile Picture:
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setProfilePicture(e.target.files[0])}
-          />
-        </label>
-        <button type="submit" disabled={loading}>
+      <form className="creator-form" onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={pageName}
+          onChange={(e) => setPageName(e.target.value)}
+          placeholder="Page Name"
+          required
+        />
+        <textarea
+          value={about}
+          onChange={(e) => setAbout(e.target.value)}
+          placeholder="About this page"
+          required
+        ></textarea>
+        <input
+          type="file"
+          onChange={(e) => setProfilePicture(e.target.files[0])}
+          accept="image/*"
+        />
+        <button type="submit" className="creator-button" disabled={loading}>
           {loading ? "Creating..." : "Create Page"}
         </button>
       </form>

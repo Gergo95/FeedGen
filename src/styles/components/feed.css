@@ -1,14 +1,12 @@
-/* Feed Page Container */
 .feed-container {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr; /* Three columns: 1/2/1 ratio */
+  grid-template-columns: 1fr 2fr 1fr;
   gap: 20px; /* Spacing between columns */
   padding: 20px;
   max-width: 1600px;
-  margin: 0 auto; /* Center the content */
+  margin: 0 auto;
 }
 
-/* Individual Columns */
 .feed-column {
   background-color: #f9f9f9; /* Light background for each column */
   border-radius: 10px;
@@ -16,11 +14,6 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
   overflow-y: auto; /* Enable scrolling if content overflows */
 }
-
-/* Specific Column Styling 
-.left-column {
-  /* Add additional styling for left column if needed 
-} */
 
 .middle-column {
   display: flex;
@@ -69,7 +62,6 @@
   background-color: #e0e0e0;
 }
 
-/* Responsive Design */
 @media (max-width: 1024px) {
   .feed-container {
     grid-template-columns: 1fr; /* Stack all columns on smaller screens */

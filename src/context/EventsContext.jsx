@@ -35,6 +35,25 @@ export const EventProvider = ({ children }) => {
     }
   };
 
+  const fetchEventsYouGoing = async (userId) => {
+    try {
+      const eventRef = collection(db, "Events");
+      //check if the userId is in the followersId array
+      const q = query(eventRef, where("goingId", "array-contains", userId));
+      const querySnapshot = await getDocs(q);
+
+      const events = [];
+      querySnapshot.forEach((doc) => {
+        events.push({ id: doc.id, ...doc.data() });
+      });
+
+      return events;
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      throw error;
+    }
+  };
+
   //Fetch events by current user
   const fetchEventsByUser = async (userId) => {
     try {
@@ -57,10 +76,10 @@ export const EventProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const eventRef = doc(db, "Events", eventId); // Reference to the group document
-      const eventDoc = await getDoc(eventRef); // Fetch the document
+      const eventRef = doc(db, "Events", eventId);
+      const eventDoc = await getDoc(eventRef);
       if (eventDoc.exists()) {
-        setEvents(eventDoc.data()); // If document exists, set group data
+        setEvents(eventDoc.data());
       } else {
         setError("Event not found");
       }
@@ -105,6 +124,30 @@ export const EventProvider = ({ children }) => {
     }
   };
 
+  // Update event data
+  const updateEventData = async (eventId, updatedData) => {
+    try {
+      const eventRef = doc(db, "Events", eventId);
+      await updateDoc(eventRef, updatedData);
+    } catch (error) {
+      console.error("Error updating event data:", error);
+      throw error;
+    }
+  };
+
+  // Upload event image and get download URL
+  const uploadEventImage = async (eventId, file) => {
+    try {
+      const storageRef = ref(storage, `events/${eventId}/photo`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading event image:", error);
+      throw error;
+    }
+  };
+
   const leaveEvent = async (eventId, userId, going) => {
     if (!eventId || !userId) {
       console.log("Event ID or User ID is missing.");
@@ -145,6 +188,9 @@ export const EventProvider = ({ children }) => {
         fetchEventByEventId,
         leaveEvent,
         joinEvent,
+        updateEventData,
+        uploadEventImage,
+        fetchEventsYouGoing,
       }}
     >
       {children}

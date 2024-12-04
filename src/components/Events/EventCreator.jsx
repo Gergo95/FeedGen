@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useEvents } from "../../context/EventsContext";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage, db } from "../../firebase/firebaseConfig";
-import "../../styles/components/EventCreator.css";
+import { storage } from "../../firebase/firebaseConfig";
+import "../../styles/components/Creator.css";
 import { toast } from "react-toastify";
 
 const EventCreator = () => {
@@ -65,46 +65,38 @@ const EventCreator = () => {
   };
 
   return (
-    <form className="event-creator" onSubmit={handleSubmit}>
+    <div className="creator-container">
       <h2>Create Event</h2>
-
-      <label>
-        Event Name:
+      <form className="creator-form" onSubmit={handleSubmit}>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Enter event name"
+          required
         />
-      </label>
-
-      <label>
-        Description:
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter event description"
+          required
         ></textarea>
-      </label>
-
-      <label>
-        Date:
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
+          required
         />
-      </label>
-
-      <label>
-        Event Picture:
-        <input type="file" onChange={(e) => setImage(e.target.files[0])} />
-      </label>
-
-      <button type="submit" disabled={uploading}>
-        {uploading ? "Creating..." : "Create Event"}
-      </button>
-    </form>
+        <input
+          type="file"
+          onChange={(e) => setImage(e.target.files[0])}
+          accept="image/*"
+        />
+        <button type="submit" className="creator-button" disabled={uploading}>
+          {uploading ? "Creating..." : "Create Event"}
+        </button>
+      </form>
+    </div>
   );
 };
 

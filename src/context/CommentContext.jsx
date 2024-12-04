@@ -14,19 +14,15 @@ import {
   orderBy,
 } from "firebase/firestore";
 
-// Create a Context
 const CommentContext = createContext();
 
-// Custom Hook to Use Context
 export const useComments = () => {
   return useContext(CommentContext);
 };
 
-// CommentProvider Component
 export const CommentProvider = ({ children }) => {
   const [comments, setComments] = useState([]);
 
-  // Fetch all comments for a specific post
   const fetchCommentsByPostId = async (postId) => {
     try {
       const q = query(
@@ -38,7 +34,7 @@ export const CommentProvider = ({ children }) => {
       const fetchedComments = await Promise.all(
         querySnapshot.docs.map(async (commentDoc) => {
           const commentData = commentDoc.data();
-          const userRef = doc(db, "Users", commentData.userId); // Assuming user data is in a "Users" collection
+          const userRef = doc(db, "Users", commentData.userId);
           const userDoc = await getDoc(userRef);
           const userData = userDoc.exists() ? userDoc.data() : {};
           return {
@@ -69,8 +65,7 @@ export const CommentProvider = ({ children }) => {
         createdAt: serverTimestamp(),
       };
       const commentRef = await addDoc(collection(db, "Comments"), newComment);
-      //setComments((prev) => [...prev, { id: commentRef.id, ...newComment }]);
-      // Ensure 'prev' is an array and append the new comment
+      // prev is an array and append the new comment
       setComments((prev) =>
         Array.isArray(prev)
           ? [...prev, { id: commentRef.id, ...newComment }]

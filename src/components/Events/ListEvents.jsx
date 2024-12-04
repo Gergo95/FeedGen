@@ -8,7 +8,7 @@ import { Link } from "react-router-dom"; // Import Link for navigation
 
 const ListEvents = () => {
   const { currentUser } = useAuth();
-  const { fetchEvents, updateEvent, fetchEventsByUser } = useEvents();
+  const { fetchEvents, updateEvent, fetchEventsYouGoing } = useEvents();
   const { createPost, fetchPosts } = usePosts();
 
   const [events, setEvents] = useState([]);
@@ -19,34 +19,14 @@ const ListEvents = () => {
   useEffect(() => {
     const loadEvents = async () => {
       try {
-        const eventsData = await fetchEventsByUser(currentUser.uid);
+        const eventsData = await fetchEventsYouGoing(currentUser.uid);
         setEvents(eventsData);
       } catch (error) {
         console.error("Error fetching events:", error);
       }
     };
     loadEvents();
-  }, [fetchEventsByUser]);
-
-  const handleGoingToggle = async (eventId, userId) => {
-    const event = events.find((event) => event.id === eventId);
-    const isGoing = event.going.includes(userId);
-
-    const updatedGoing = isGoing
-      ? event.going.filter((id) => id !== userId) // Remove user
-      : [...event.going, userId]; // Add user
-
-    try {
-      await updateEvent(eventId, { going: updatedGoing });
-      setEvents((prevEvents) =>
-        prevEvents.map((e) =>
-          e.id === eventId ? { ...e, going: updatedGoing } : e
-        )
-      );
-    } catch (error) {
-      console.error("Error updating going list:", error);
-    }
-  };
+  }, [fetchEventsYouGoing]);
 
   const handlePostSubmit = async (e) => {
     e.preventDefault();

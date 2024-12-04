@@ -29,9 +29,9 @@ const events = [
 function FeedPage() {
   const [selectedChat, setSelectedChat] = useState(null);
   const [selectedPost, setSelectedPost] = useState(null);
-  const { currentUser } = useAuth(); //we get the current user.
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const [openChats, setOpenChats] = useState([]); // Make sure this is initialized as an empty array
+  const [openChats, setOpenChats] = useState([]);
   const [posts, setPosts] = useState([]);
   const [selectedOption, setSelectedOption] = useState("pages"); // New state for toggle
 
@@ -48,7 +48,6 @@ function FeedPage() {
     }
   };
 
-  // Function to handle closing the chat window
   const closeChat = (friendId) => {
     setOpenChats(openChats.filter((chat) => chat.uid !== friendId));
   };
@@ -57,7 +56,6 @@ function FeedPage() {
 
   const handleFilterChange = (selectedFilter) => {
     setFilter(selectedFilter);
-    // Optionally trigger filtering logic for PostsFeed
     console.log("Selected Filter:", selectedFilter);
   };
 
@@ -65,7 +63,7 @@ function FeedPage() {
     <>
       <Navbar />
       <div className="feed-container">
-        {/* Left Column: Groups & Pages */}
+        {/* User groups, pages, and events + calendar */}
         <div className="feed-column left-column">
           <GroupsPages
             user={currentUser}
@@ -75,7 +73,7 @@ function FeedPage() {
           />
         </div>
 
-        {/* Middle Column: Posts */}
+        {/* Middle Column: MainFeed */}
         <div className="feed-column middle-column">
           <PostCreator />
 
@@ -104,11 +102,7 @@ function FeedPage() {
           </div>
 
           {/* Conditionally render components based on selectedOption */}
-          {selectedOption === "pages" ? (
-            <FilterPagePost />
-          ) : (
-            <PostList posts={posts} />
-          )}
+          {selectedOption === "pages" ? <FilterPagePost /> : <PostList feed />}
 
           {/* Modal for Detailed Post View */}
           {selectedPost && (
@@ -127,7 +121,7 @@ function FeedPage() {
               {/* Chat Sidebar */}
               <ChatSidebar
                 currentUser={currentUser}
-                openChat={handleOpenChat} // Pass function to open chat
+                openChat={handleOpenChat}
               />
             </div>
             {/* Pop-Up Chat Windows */}

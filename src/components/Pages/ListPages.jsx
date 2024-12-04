@@ -3,11 +3,11 @@ import { useAuth } from "../../context/AuthContext";
 import { useEffect } from "react";
 import "../../styles/components/ListPages.css";
 import { usePages } from "../../context/PagesContext";
-import { Link } from "react-router-dom"; // Import Link for navigation
+import { Link } from "react-router-dom";
 
 const ListPages = () => {
   const { currentUser } = useAuth();
-  const { fetchPagesByUser } = usePages();
+  const { fetchPagesYouFollow } = usePages();
   const [selectedPages, setSelectedPages] = useState(null);
 
   const [pages, setPages] = useState([]);
@@ -15,14 +15,14 @@ const ListPages = () => {
   useEffect(() => {
     const loadPages = async () => {
       try {
-        const pagesData = await fetchPagesByUser(currentUser.uid);
+        const pagesData = await fetchPagesYouFollow(currentUser.uid);
         setPages(pagesData);
       } catch (error) {
         console.error("Error fetching pages:", error);
       }
     };
     loadPages();
-  }, [fetchPagesByUser]);
+  }, [fetchPagesYouFollow]);
 
   return (
     <>

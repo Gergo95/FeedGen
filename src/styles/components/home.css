@@ -23,18 +23,15 @@
 
 .branding .logo {
   max-width: 100px;
-  /* Csökkentve az alsó margót */
   margin-bottom: 0.5rem;
 }
 
 .app-name {
   font-size: 2.5rem;
-  /* Hozzáadva felső és alsó margó */
   margin: 0.5rem 0;
 }
 
 .features {
-  /* Csökkentve a felső margót */
   margin-top: 1rem;
 }
 
@@ -50,7 +47,6 @@
 
 .features-list li {
   font-size: 1.2rem;
-  /* Csökkentve a listaelemek közötti margót */
   margin: 0.3rem 0;
 }
 
@@ -66,14 +62,14 @@
 .login-box {
   max-width: 400px;
   width: 100%;
-  padding: 1.5rem; /* Csökkentve a padding-et */
+  padding: 1.5rem;
   text-align: center;
 }
 
 .login-form input {
   width: 100%;
   padding: 0.8rem;
-  margin: 0.3rem 0; /* Csökkentve a margin-t */
+  margin: 0.3rem 0;
   border: 1px solid #ddd;
   border-radius: var(--border-radius);
   font-size: 1rem;
@@ -88,7 +84,7 @@
   font-size: 1rem;
   border-radius: var(--border-radius);
   cursor: pointer;
-  margin-top: 0.8rem; /* Csökkentve a felső margót */
+  margin-top: 0.8rem;
   transition: background 0.3s;
 }
 
@@ -97,7 +93,7 @@
 }
 
 .signup-text {
-  margin-top: 0.8rem; /* Csökkentve a margót */
+  margin-top: 0.8rem;
   font-size: 0.9rem;
 }
 
@@ -111,7 +107,6 @@
   text-decoration: underline;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .home-container {
     flex-direction: column;

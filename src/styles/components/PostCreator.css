@@ -1,4 +1,3 @@
-/* Post Creator Container */
 .post-creator {
   background-color: #ffffff;
   border: 1px solid #ddd;
@@ -8,7 +7,6 @@
   margin-bottom: 20px;
 }
 
-/* Textarea for Post Content */
 .post-input {
   width: 100%;
   height: 80px;
@@ -24,7 +22,6 @@
   color: #aaa;
 }
 
-/* Post Actions (Image Upload + Submit Button) */
 .post-actions {
   display: flex;
   justify-content: space-between;
@@ -33,7 +30,7 @@
 }
 
 .image-upload-label {
-  background-color: #28a745; /* Primary Green */
+  background-color: #28a745;
   color: white;
   padding: 8px 15px;
   border-radius: 8px;
@@ -43,15 +40,15 @@
 }
 
 .image-upload-label:hover {
-  background-color: #218838; /* Slightly darker green */
+  background-color: #218838;
 }
 
 .image-upload-label input {
-  display: none; /* Hide the actual file input */
+  display: none;
 }
 
 .post-submit-button {
-  background-color: #007bff; /* Primary Blue */
+  background-color: #007bff;
   color: white;
   padding: 8px 20px;
   border: none;
@@ -62,10 +59,9 @@
 }
 
 .post-submit-button:hover {
-  background-color: #0056b3; /* Slightly darker blue */
+  background-color: #0056b3;
 }
 
-/* Image Preview Section */
 .post-preview {
   margin-top: 10px;
 }

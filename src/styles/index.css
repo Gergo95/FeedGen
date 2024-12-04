@@ -17,18 +17,16 @@ body {
 }
 
 :root {
-  --main-color: #2ecc71; /* Green color for branding */
+  --main-color: #2ecc71;
   --text-color: #333;
-  --background-color: #f9f9f9;
-  --secondary-color: #fff;
+
   --border-radius: 10px;
   --shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* CSS for a simple spinner */
 .spinner {
-  border: 4px solid #f3f3f3; /* Light gray background */
-  border-top: 4px solid #3498db; /* Blue color for the spinner */
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
   border-radius: 50%;
   width: 80px;
   height: 80px;
@@ -43,19 +41,18 @@ body {
     transform: rotate(360deg);
   }
 }
-/* Remove underline and set default color */
+
 a {
   text-decoration: none;
-  color: inherit; /* Inherit color from the parent element */
+  color: inherit;
 }
 
-/* Optional: Customize hover effects */
 a:hover {
-  color: #1a73e8; /* Example: Change color on hover */
-  text-decoration: underline; /* Add underline on hover if desired */
+  color: #1a73e8;
+  text-decoration: underline;
 }
 
 /* Prevent visited links from changing color */
 a:visited {
-  color: inherit; /* Same as default color */
+  color: inherit;
 }

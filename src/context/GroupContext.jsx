@@ -26,9 +26,8 @@ export const GroupProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Create a new group
   const createGroup = async (newGroup, imageFile, uid) => {
-    const groupRef = doc(collection(db, "Groups")); // Reference for a new group
+    const groupRef = doc(collection(db, "Groups"));
 
     let groupImageUrl = null;
 
@@ -46,10 +45,34 @@ export const GroupProvider = ({ children }) => {
       createdAt: serverTimestamp(),
       photoURL: groupImageUrl,
       memberId: [uid],
-      members: [uid].length,
+      members: 1,
     };
 
     await setDoc(groupRef, groupData);
+  };
+
+  // Update event data
+  const updateGroupData = async (groupId, updatedData) => {
+    try {
+      const groupRef = doc(db, "Groups", groupId);
+      await updateDoc(groupRef, updatedData);
+    } catch (error) {
+      console.error("Error updating group data:", error);
+      throw error;
+    }
+  };
+
+  // Upload event image and get download URL
+  const uploadGroupImage = async (groupId, file) => {
+    try {
+      const storageRef = ref(storage, `groups/${groupId}/photo`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading group image:", error);
+      throw error;
+    }
   };
 
   // Fetch all groups
@@ -112,6 +135,25 @@ export const GroupProvider = ({ children }) => {
     }
   };
 
+  const fetchGroupsYourMember = async (userId) => {
+    try {
+      const groupRef = collection(db, "Groups");
+      // see  if the userId is in the followersId array
+      const q = query(groupRef, where("memberId", "array-contains", userId));
+      const querySnapshot = await getDocs(q);
+
+      const groups = [];
+      querySnapshot.forEach((doc) => {
+        groups.push({ id: doc.id, ...doc.data() });
+      });
+
+      return groups;
+    } catch (error) {
+      console.error("Error fetching pages:", error);
+      throw error;
+    }
+  };
+
   //Fetch Groups by user
   const fetchGroupsByUser = async (userId) => {
     try {
@@ -134,10 +176,10 @@ export const GroupProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const groupRef = doc(db, "Groups", groupId); // Reference to the group document
-      const groupDoc = await getDoc(groupRef); // Fetch the document
+      const groupRef = doc(db, "Groups", groupId);
+      const groupDoc = await getDoc(groupRef);
       if (groupDoc.exists()) {
-        setGroups(groupDoc.data()); // If document exists, set group data
+        setGroups(groupDoc.data());
       } else {
         setError("Group not found");
       }
@@ -175,6 +217,9 @@ export const GroupProvider = ({ children }) => {
         fetchGroupByGroupId,
         joinGroup,
         leaveGroup,
+        fetchGroupsYourMember,
+        updateGroupData,
+        uploadGroupImage,
       }}
     >
       {children}

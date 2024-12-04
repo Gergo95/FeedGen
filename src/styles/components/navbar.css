@@ -1,10 +1,8 @@
-/* Navbar Container */
 .navbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: rgb(2, 89, 2);
-  color: white;
   padding: 10px 20px;
   height: 60px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -13,14 +11,12 @@
   z-index: 1000;
 }
 
-/* Logo Section */
 .navbar-logo img {
-  height: 40px; /* Adjust based on your logo's design */
+  height: 40px;
   width: auto;
   cursor: pointer;
 }
 
-/* Search Bar */
 .navbar-search {
   flex-grow: 1;
   margin: 0 20px;
@@ -36,7 +32,6 @@
   font-size: 1rem;
 }
 
-/* NEW SEARCH BAR  */
 .search-bar {
   position: relative;
   flex: 1;
@@ -80,7 +75,6 @@
   text-align: center;
 }
 
-/* Icons Section */
 .navbar-icons {
   display: flex;
   align-items: center;
@@ -97,10 +91,9 @@
   color: #d4edda;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .navbar-search {
-    display: none; /* Hide search bar on smaller screens */
+    display: none;
   }
 
   .navbar-icons {
@@ -129,6 +122,11 @@
 .notification-icon {
   position: relative;
   cursor: pointer;
+  color: #070606;
+}
+
+.notification-icon:hover {
+  color: #d4edda;
 }
 
 .notification-icon .notification-count {
@@ -144,19 +142,19 @@
 
 .notification-dropdown {
   position: absolute;
-  top: 40px; /* Adjust based on your navbar height */
-  right: 10px; /* Align to the right edge of the bell icon */
+  top: 40px;
+  right: 10px;
   width: 300px;
   max-height: 400px;
   overflow-y: auto;
-  background-color: #333; /* Dark background for good contrast */
-  color: #fff; /* White text for readability */
+  background-color: #333;
+  color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   padding: 10px;
 }
-/* Individual Notification Item */
+
 .notification-item {
   display: flex;
   flex-direction: column;
@@ -167,14 +165,13 @@
   border-bottom: none;
 }
 
-/* Read and Unread Notifications */
 .notification-item.read {
-  background-color: #1d1c1c; /* Slightly darker for read notifications */
+  background-color: #1d1c1c;
 }
 
 .notification-item.unread {
-  background-color: #555; /* Slightly brighter for unread notifications */
-  font-weight: bold; /* Highlight unread notifications */
+  background-color: #555;
+  font-weight: bold;
 }
 
 .notification-item p {
@@ -183,17 +180,15 @@
 
 .notification-item .timestamp {
   font-size: 0.8rem;
-  color: #ccc; /* Subtle color for timestamps */
+  color: #ccc;
   margin-top: 5px;
 }
 
-/* Hover Effect */
 .notification-item:hover {
-  background-color: #070606; /* Add a hover effect */
+  background-color: #070606;
   cursor: pointer;
 }
 
-/* Scrollbar for Overflow */
 .notification-dropdown::-webkit-scrollbar {
   width: 6px;
 }

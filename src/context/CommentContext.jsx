@@ -1,18 +1,10 @@
 import React, { createContext, useContext, useState } from "react";
-import { db } from "../firebase/firebaseConfig";
 import {
-  collection,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  getDocs,
-  getDoc,
-  query,
-  where,
-  serverTimestamp,
-  orderBy,
-} from "firebase/firestore";
+  fetchCommentsByPostId as serviceFetchCommentsByPostId,
+  createCommentToPost as serviceCreateCommentToPost,
+  updateComment as serviceUpdateComment,
+  deleteComment as serviceDeleteComment,
+} from "../service/CommentService";
 
 const CommentContext = createContext();
 
@@ -21,29 +13,12 @@ export const useComments = () => {
 };
 
 export const CommentProvider = ({ children }) => {
-  const [comments, setComments] = useState([]);
+  // comments will be a dictionary { [postId]: Array of comments }
+  const [comments, setComments] = useState({});
 
-  const fetchCommentsByPostId = async (postId) => {
+  const handleFetchCommentsByPostId = async (postId) => {
     try {
-      const q = query(
-        collection(db, "Comments"),
-        where("postId", "==", postId),
-        orderBy("createdAt", "asc")
-      );
-      const querySnapshot = await getDocs(q);
-      const fetchedComments = await Promise.all(
-        querySnapshot.docs.map(async (commentDoc) => {
-          const commentData = commentDoc.data();
-          const userRef = doc(db, "Users", commentData.userId);
-          const userDoc = await getDoc(userRef);
-          const userData = userDoc.exists() ? userDoc.data() : {};
-          return {
-            id: commentDoc.id,
-            ...commentData,
-            user: userData, // Attach user details to the comment
-          };
-        })
-      );
+      const fetchedComments = await serviceFetchCommentsByPostId(postId);
       setComments((prev) => ({
         ...prev,
         [postId]: fetchedComments,
@@ -55,53 +30,57 @@ export const CommentProvider = ({ children }) => {
     }
   };
 
-  // Add a new comment
-  const createCommentToPost = async (postId, userId, content) => {
+  const handleCreateCommentToPost = async (postId, userId, content) => {
     try {
-      const newComment = {
+      const newComment = await serviceCreateCommentToPost(
         postId,
         userId,
-        content,
-        createdAt: serverTimestamp(),
-      };
-      const commentRef = await addDoc(collection(db, "Comments"), newComment);
-      // prev is an array and append the new comment
-      setComments((prev) =>
-        Array.isArray(prev)
-          ? [...prev, { id: commentRef.id, ...newComment }]
-          : [{ id: commentRef.id, ...newComment }]
+        content
       );
-      return commentRef;
+      // Add the new comment to the array for that postId
+      setComments((prev) => ({
+        ...prev,
+        [postId]: prev[postId] ? [...prev[postId], newComment] : [newComment],
+      }));
+      return newComment;
     } catch (error) {
       console.error("Error creating comment:", error);
       throw error;
     }
   };
 
-  // Update a comment
-  const updateComment = async (commentId, updatedContent) => {
+  const handleUpdateComment = async (commentId, updatedContent) => {
     try {
-      const commentRef = doc(db, "Comments", commentId);
-      await updateDoc(commentRef, { content: updatedContent });
-      setComments((prev) =>
-        prev.map((comment) =>
-          comment.id === commentId
-            ? { ...comment, content: updatedContent }
-            : comment
-        )
-      );
+      const {
+        commentId: cId,
+        postId,
+        updatedContent: newContent,
+      } = await serviceUpdateComment(commentId, updatedContent);
+      // Update the comment in the array for that postId
+      setComments((prev) => {
+        if (!prev[postId]) return prev;
+        const updatedComments = prev[postId].map((comment) =>
+          comment.id === cId ? { ...comment, content: newContent } : comment
+        );
+        return { ...prev, [postId]: updatedComments };
+      });
     } catch (error) {
       console.error("Error updating comment:", error);
       throw error;
     }
   };
 
-  // Delete a comment
-  const deleteComment = async (commentId) => {
+  const handleDeleteComment = async (commentId) => {
     try {
-      const commentRef = doc(db, "Comments", commentId);
-      await deleteDoc(commentRef);
-      setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+      const { commentId: cId, postId } = await serviceDeleteComment(commentId);
+      // Remove the comment from the array for that postId
+      setComments((prev) => {
+        if (!prev[postId]) return prev;
+        const filteredComments = prev[postId].filter(
+          (comment) => comment.id !== cId
+        );
+        return { ...prev, [postId]: filteredComments };
+      });
     } catch (error) {
       console.error("Error deleting comment:", error);
       throw error;
@@ -112,10 +91,10 @@ export const CommentProvider = ({ children }) => {
     <CommentContext.Provider
       value={{
         comments,
-        fetchCommentsByPostId,
-        createCommentToPost,
-        updateComment,
-        deleteComment,
+        fetchCommentsByPostId: handleFetchCommentsByPostId,
+        createCommentToPost: handleCreateCommentToPost,
+        updateComment: handleUpdateComment,
+        deleteComment: handleDeleteComment,
       }}
     >
       {children}

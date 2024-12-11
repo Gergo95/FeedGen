@@ -36,13 +36,14 @@ function SignUp() {
       );
       const user = userCredentials.user;
 
-      // Send Email Verification
+      //Send Email Verification
       await sendEmailVerification(user);
       toast.info("Email verification link sent. Please verify your email.", {
         position: "top-center",
       });
+      navigate("/home");
 
-      // Upload profile picture to Firebase Storage
+      //Upload profile picture to Firebase Storage
       const storageRef = ref(storage, `profilePictures/${user.uid}`);
       const uploadTask = uploadBytesResumable(storageRef, profilePicture);
 
@@ -61,13 +62,13 @@ function SignUp() {
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-          // Update user profile with Firebase Auth
+          //Update user profile with Firebase Auth
           await updateProfile(user, {
             displayName: `${firstName} ${lastName}`,
             photoURL: downloadURL,
           });
 
-          // Reload the user to ensure the updated profile is available
+          //Reload the user to ensure the updated profile is available
           await reload(user);
           console.log("User Registered Successfully!!");
           toast.success(

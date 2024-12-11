@@ -1,172 +1,95 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { db } from "../firebase/firebaseConfig";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  orderBy,
-  onSnapshot,
-  updateDoc,
-  writeBatch,
-} from "firebase/firestore";
 import { useAuth } from "./AuthContext";
+import {
+  fetchNotificationsForUser,
+  subscribeToUserNotifications,
+  markAsRead,
+  markAllAsRead,
+} from "../service/NotificationService";
 
-// Create the NotificationContext
 const NotificationContext = createContext();
 
-// Custom hook to use the NotificationContext
 export const useNotifications = () => useContext(NotificationContext);
 
-// NotificationProvider Component
 export const NotificationProvider = ({ children }) => {
   const { currentUser } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch a user's data by their UID
-  const fetchUserData = async (uid) => {
-    try {
-      const userRef = doc(db, "Users", uid);
-      const userDoc = await getDoc(userRef);
-      return userDoc.exists() ? { id: userDoc.id, ...userDoc.data() } : null;
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      return null;
-    }
-  };
-
-  // Fetch all notifications for the current user
-  const fetchNotifications = async () => {
+  const handleFetchNotifications = async () => {
     if (!currentUser) return;
     setLoading(true);
     setError(null);
 
     try {
-      const notificationsRef = collection(db, "Notifications");
-      const q = query(
-        notificationsRef,
-        where("recipientId", "==", currentUser.uid),
-        orderBy("timestamp", "desc")
-      );
-      const querySnapshot = await getDocs(q);
+      const rawNotifications = await fetchNotificationsForUser(currentUser.uid);
+      // The service's subscription already enriches them, but if you want to manually enrich here,
+      // you would import enrichNotificationsWithUserData and call it.
+      // const enriched = await enrichNotificationsWithUserData(rawNotifications);
+      // setNotifications(enriched);
+      // For consistency, let's just call fetchNotificationsForUser and enrich here if needed.
 
-      const fetchedNotifications = await Promise.all(
-        querySnapshot.docs.map(async (doc) => {
-          const notificationData = doc.data();
-
-          // Fetch sender and recipient user data
-          const senderData = await fetchUserData(notificationData.senderId);
-          const recipientData = await fetchUserData(
-            notificationData.recipientId
-          );
-
-          return {
-            id: doc.id,
-            ...notificationData,
-            sender: senderData,
-            recipient: recipientData,
-          };
-        })
-      );
-
-      setNotifications(fetchedNotifications);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
+      // If you want to keep enrichment consistent:
+      // Since subscribeToUserNotifications handles enrichment,
+      // and fetchNotificationsForUser does not, you may want to enrich here.
+      // But if you're always relying on the subscription for updates,
+      // you might not need this fetch anymore, unless you're calling it elsewhere.
+      //
+      // For clarity and consistency, let's just leave these as raw and assume subscription handles real-time updates.
+      setNotifications(rawNotifications);
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
       setError("Failed to load notifications.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Real-time listener for notifications
   useEffect(() => {
     if (!currentUser) return;
 
-    const notificationsRef = collection(db, "Notifications");
-    const q = query(
-      notificationsRef,
-      where("recipientId", "==", currentUser.uid),
-      orderBy("timestamp", "desc")
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      async (snapshot) => {
-        const fetchedNotifications = await Promise.all(
-          snapshot.docs.map(async (doc) => {
-            const notificationData = doc.data();
-
-            // Fetch sender and recipient user data
-            const senderData = await fetchUserData(notificationData.senderId);
-            const recipientData = await fetchUserData(
-              notificationData.recipientId
-            );
-
-            return {
-              id: doc.id,
-              ...notificationData,
-              sender: senderData,
-              recipient: recipientData,
-            };
-          })
-        );
-        setNotifications(fetchedNotifications);
-      },
-      (error) => {
-        console.error("Error with real-time notifications listener:", error);
+    // Set up the real-time listener for notifications
+    const unsubscribe = subscribeToUserNotifications(
+      currentUser.uid,
+      (enrichedNotifications) => {
+        setNotifications(enrichedNotifications);
       }
     );
 
     return () => unsubscribe();
   }, [currentUser]);
 
-  // Mark a notification as read
-  const markAsRead = async (notificationId) => {
-    try {
-      const notificationRef = doc(db, "Notifications", notificationId);
-      await updateDoc(notificationRef, { read: true });
-      console.log(`Notification ${notificationId} marked as read.`);
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-    }
+  const handleMarkAsRead = async (notificationId) => {
+    await markAsRead(notificationId);
   };
 
-  // Mark all notifications as read
-  const markAllAsRead = async () => {
-    const unreadNotifications = notifications.filter((notif) => !notif.read);
+  const handleMarkAllAsRead = async () => {
+    const unreadNotificationIds = notifications
+      .filter((notif) => !notif.read)
+      .map((notif) => notif.id);
 
-    try {
-      const batch = writeBatch(db); // Use writeBatch from Firestore
-      unreadNotifications.forEach((notif) => {
-        const notificationRef = doc(db, "Notifications", notif.id);
-        batch.update(notificationRef, { read: true });
-      });
+    if (unreadNotificationIds.length > 0) {
+      await markAllAsRead(unreadNotificationIds);
 
-      await batch.commit(); // Commit the batch operation
-      console.log("All notifications marked as read.");
-
+      // Update local state to reflect the changes
       setNotifications((prev) =>
         prev.map((notif) => ({ ...notif, read: true }))
       );
-    } catch (error) {
-      console.error("Error marking all notifications as read:", error);
     }
   };
+
+  const value = {
+    notifications,
+    loading,
+    error,
+    fetchNotifications: handleFetchNotifications,
+    markAsRead: handleMarkAsRead,
+    markAllAsRead: handleMarkAllAsRead,
+  };
+
   return (
-    <NotificationContext.Provider
-      value={{
-        notifications,
-        loading,
-        error,
-        fetchNotifications,
-        markAsRead,
-        markAllAsRead,
-      }}
-    >
+    <NotificationContext.Provider value={value}>
       {children}
     </NotificationContext.Provider>
   );

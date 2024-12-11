@@ -84,10 +84,8 @@ const UserProfile = () => {
         setLoading(false);
         return;
       }
-
       const friendshipsRef = collection(db, "Friendships");
       const friendRequestsRef = collection(db, "FriendRequests");
-
       // Check if they are already friends
       const q1 = query(
         friendshipsRef,
@@ -105,7 +103,6 @@ const UserProfile = () => {
         setLoading(false);
         return;
       }
-
       // Check if a friend request has been sent or received
       const q3 = query(
         friendRequestsRef,

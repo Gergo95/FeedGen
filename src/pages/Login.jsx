@@ -149,7 +149,10 @@ function Login() {
             <span>OR</span>
           </div>
           <button className="google-login-button" onClick={singInWithGoogle}>
-            <img src="img/google-logo.png" alt="Google Icon" />
+            <img
+              src="https://firebasestorage.googleapis.com/v0/b/feedgen-cd500.firebasestorage.app/o/google-logo.png?alt=media&token=4487c36d-2dc3-4682-8f04-1a1d26f249ff"
+              alt="Google Icon"
+            />
             Log In with Google
           </button>
 

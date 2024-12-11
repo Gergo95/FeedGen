@@ -1,18 +1,15 @@
 import React, { createContext, useContext, useCallback, useState } from "react";
-import { auth, db, storage } from "../firebase/firebaseConfig";
 import {
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  doc,
-  getDoc,
-  updateDoc,
-  arrayUnion,
-} from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { useAuth } from "./AuthContext";
+  createEvent as serviceCreateEvent,
+  fetchEventsYouGoing as serviceFetchEventsYouGoing,
+  fetchEventsByUser as serviceFetchEventsByUser,
+  fetchEventById as serviceFetchEventById,
+  fetchEvents as serviceFetchEvents,
+  joinEvent as serviceJoinEvent,
+  updateEventData as serviceUpdateEventData,
+  uploadEventImage as serviceUploadEventImage,
+  leaveEvent as serviceLeaveEvent,
+} from "../service/EventService";
 
 const EventContext = createContext();
 
@@ -23,63 +20,40 @@ export const EventProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const createEvent = async (eventData) => {
+  const handleCreateEvent = async (eventData) => {
     try {
-      const eventRef = collection(db, "Events");
-      const docRef = await addDoc(eventRef, eventData);
-      console.log("Event created with ID:", docRef.id);
-      return docRef.id;
+      return await serviceCreateEvent(eventData);
     } catch (error) {
       console.error("Error creating event:", error);
       throw error;
     }
   };
 
-  const fetchEventsYouGoing = async (userId) => {
+  const handleFetchEventsYouGoing = async (userId) => {
     try {
-      const eventRef = collection(db, "Events");
-      //check if the userId is in the followersId array
-      const q = query(eventRef, where("goingId", "array-contains", userId));
-      const querySnapshot = await getDocs(q);
-
-      const events = [];
-      querySnapshot.forEach((doc) => {
-        events.push({ id: doc.id, ...doc.data() });
-      });
-
-      return events;
+      return await serviceFetchEventsYouGoing(userId);
     } catch (error) {
       console.error("Error fetching events:", error);
       throw error;
     }
   };
 
-  //Fetch events by current user
-  const fetchEventsByUser = async (userId) => {
+  const handleFetchEventsByUser = async (userId) => {
     try {
-      const eventRef = collection(db, "Events");
-      const q = query(eventRef, where("creatorId", "==", userId));
-      const querySnapshot = await getDocs(q);
-      const events = [];
-      querySnapshot.forEach((doc) => {
-        events.push({ id: doc.id, ...doc.data() });
-      });
-      return events;
+      return await serviceFetchEventsByUser(userId);
     } catch (error) {
       console.error("Error fetching events:", error);
       throw error;
     }
   };
 
-  //Fetch Them to display the concrete Event in EventProfile.
-  const fetchEventByEventId = useCallback(async (eventId) => {
+  const handleFetchEventByEventId = useCallback(async (eventId) => {
     setLoading(true);
     setError(null);
     try {
-      const eventRef = doc(db, "Events", eventId);
-      const eventDoc = await getDoc(eventRef);
-      if (eventDoc.exists()) {
-        setEvents(eventDoc.data());
+      const eventData = await serviceFetchEventById(eventId);
+      if (eventData) {
+        setEvents(eventData);
       } else {
         setError("Event not found");
       }
@@ -91,109 +65,65 @@ export const EventProvider = ({ children }) => {
     }
   }, []);
 
-  const fetchEvents = async () => {
+  const handleFetchEvents = async () => {
     try {
-      const eventsCollection = collection(db, "Events");
-      const snapshot = await getDocs(eventsCollection);
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      return await serviceFetchEvents();
     } catch (error) {
       console.error("Error fetching events:", error);
       throw error;
     }
   };
 
-  //Join group
-  const joinEvent = async (userId, eventId, going) => {
-    if (!userId || !eventId) {
-      console.lerror("Event ID or User ID is missing!");
-      return;
-    }
-
+  const handleJoinEvent = async (userId, eventId, going) => {
     try {
-      const eventRef = doc(db, "Events", eventId);
-      await updateDoc(eventRef, {
-        goingId: arrayUnion(userId),
-        going: going + 1,
-      });
-      console.log("User added to the Event successfully!");
+      await serviceJoinEvent(userId, eventId, going);
     } catch (error) {
       console.log("Error adding user to Event!", error);
     }
   };
 
-  // Update event data
-  const updateEventData = async (eventId, updatedData) => {
+  const handleUpdateEventData = async (eventId, updatedData) => {
     try {
-      const eventRef = doc(db, "Events", eventId);
-      await updateDoc(eventRef, updatedData);
+      await serviceUpdateEventData(eventId, updatedData);
     } catch (error) {
       console.error("Error updating event data:", error);
       throw error;
     }
   };
 
-  // Upload event image and get download URL
-  const uploadEventImage = async (eventId, file) => {
+  const handleUploadEventImage = async (eventId, file) => {
     try {
-      const storageRef = ref(storage, `events/${eventId}/photo`);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-      return downloadURL;
+      return await serviceUploadEventImage(eventId, file);
     } catch (error) {
       console.error("Error uploading event image:", error);
       throw error;
     }
   };
 
-  const leaveEvent = async (eventId, userId, going) => {
-    if (!eventId || !userId) {
-      console.log("Event ID or User ID is missing.");
-    }
-
+  const handleLeaveEvent = async (eventId, userId, going) => {
     try {
-      const eventRef = doc(db, "Events", eventId);
-      const eventSnap = await getDoc(eventRef);
-
-      if (!eventSnap.exists()) {
-        console.log("Event does not exist.");
-      }
-
-      const eventData = eventSnap.data();
-
-      // Remove user ID from the memberId array
-      const updatedGoingId = eventData.goingId.filter((id) => id !== userId);
-
-      // Update the group document
-      await updateDoc(eventRef, {
-        goingId: updatedGoingId,
-        going: updatedGoingId.length,
-      });
-
-      console.log("User successfully removed from the event.");
+      await serviceLeaveEvent(eventId, userId, going);
     } catch (error) {
       console.error("Error leaving event:", error);
     }
   };
 
+  const value = {
+    events,
+    createEvent: handleCreateEvent,
+    fetchEventsByUser: handleFetchEventsByUser,
+    fetchEvents: handleFetchEvents,
+    fetchEventByEventId: handleFetchEventByEventId,
+    leaveEvent: handleLeaveEvent,
+    joinEvent: handleJoinEvent,
+    updateEventData: handleUpdateEventData,
+    uploadEventImage: handleUploadEventImage,
+    fetchEventsYouGoing: handleFetchEventsYouGoing,
+    loading,
+    error,
+  };
+
   return (
-    <EventContext.Provider
-      value={{
-        events,
-        createEvent,
-        fetchEventsByUser,
-        fetchEvents,
-        fetchEventByEventId,
-        leaveEvent,
-        joinEvent,
-        updateEventData,
-        uploadEventImage,
-        fetchEventsYouGoing,
-      }}
-    >
-      {children}
-    </EventContext.Provider>
+    <EventContext.Provider value={value}>{children}</EventContext.Provider>
   );
 };

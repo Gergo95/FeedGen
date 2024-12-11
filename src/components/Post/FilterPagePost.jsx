@@ -56,26 +56,21 @@ const FilterPagePost = () => {
         console.error("User not logged in");
         return;
       }
-
-      // Fetch pages followed by the logged-in user
+      //Fetch pages followed by the logged-in user
       const pagesCollection = collection(db, "Pages");
       const pagesQuery = query(
         pagesCollection,
         where("followersId", "array-contains", userId)
       );
       const pagesSnapshot = await getDocs(pagesQuery);
-
       const followedPageIds = pagesSnapshot.docs.map((doc) => doc.id);
-
       if (followedPageIds.length === 0) {
         setPosts([]);
-        return; // No followed pages, no posts to fetch
+        return;
       }
-
-      // Fetch posts only from followed pages and apply category filter
+      //Fetch posts only from followed pages and apply category filter
       const postsCollection = collection(db, "PagePosts");
       let q;
-
       if (categories.length > 0) {
         q = query(
           postsCollection,
@@ -90,15 +85,13 @@ const FilterPagePost = () => {
           orderBy("createdAt", "desc")
         );
       }
-
       const querySnapshot = await getDocs(q);
-
       const postsList = await Promise.all(
         querySnapshot.docs.map(async (PageDoc) => {
           const post = { id: PageDoc.id, ...PageDoc.data() };
           const postComments = await fetchCommentsByPostId(PageDoc.id);
 
-          // Fetch the page data
+          //Fetch the page data
           const pageDocRef = doc(db, "Pages", post.pageId);
           const pageSnapshot = await getDoc(pageDocRef);
           const pageData = pageSnapshot.exists() ? pageSnapshot.data() : null;
@@ -110,7 +103,6 @@ const FilterPagePost = () => {
           };
         })
       );
-
       setPosts(postsList);
     } catch (error) {
       console.error("Error fetching posts:", error);

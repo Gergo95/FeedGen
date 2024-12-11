@@ -11,7 +11,11 @@ const Home = () => {
       {/* Left Section */}
       <div className="left-section">
         <div className="branding">
-          <img src="img/logo.png" alt="FeedGen Logo" className="logo" />
+          <img
+            src="https://firebasestorage.googleapis.com/v0/b/feedgen-cd500.firebasestorage.app/o/logo.png?alt=media&token=b3d92bb6-0976-42ff-aaf1-31c459d560b1"
+            alt="FeedGen Logo"
+            className="logo"
+          />
           <h1 className="app-name">FeedGen</h1>
         </div>
         <div className="features">

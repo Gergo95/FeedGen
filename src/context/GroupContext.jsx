@@ -1,19 +1,17 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { db, storage } from "../firebase/firebaseConfig";
 import {
-  collection,
-  doc,
-  setDoc,
-  getDocs,
-  getDoc,
-  deleteDoc,
-  updateDoc,
-  serverTimestamp,
-  query,
-  where,
-  arrayUnion,
-} from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+  createGroup,
+  fetchGroups,
+  fetchGroupsByUser,
+  updateGroup,
+  deleteGroup,
+  fetchGroupById,
+  joinGroup,
+  leaveGroup,
+  fetchGroupsYourMember,
+  updateGroupData,
+  uploadGroupImage,
+} from "../service/GroupService";
 
 const GroupContext = createContext();
 
@@ -26,163 +24,47 @@ export const GroupProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const createGroup = async (newGroup, imageFile, uid) => {
-    const groupRef = doc(collection(db, "Groups"));
-
-    let groupImageUrl = null;
-
-    // If an image is attached, upload it to Firebase Storage
-    if (imageFile) {
-      const storageRef = ref(storage, `groups/${imageFile.name}`);
-      await uploadBytes(storageRef, imageFile);
-      groupImageUrl = await getDownloadURL(storageRef);
-    }
-
-    const groupData = {
-      name: newGroup.name,
-      description: newGroup.description,
-      createdBy: uid,
-      createdAt: serverTimestamp(),
-      photoURL: groupImageUrl,
-      memberId: [uid],
-      members: 1,
-    };
-
-    await setDoc(groupRef, groupData);
-  };
-
-  // Update event data
-  const updateGroupData = async (groupId, updatedData) => {
+  const handleCreateGroup = async (newGroup, imageFile, uid) => {
     try {
-      const groupRef = doc(db, "Groups", groupId);
-      await updateDoc(groupRef, updatedData);
+      await createGroup(newGroup, imageFile, uid);
     } catch (error) {
-      console.error("Error updating group data:", error);
-      throw error;
+      console.error("Error creating group:", error);
+      setError("Error creating group.");
     }
   };
 
-  // Upload event image and get download URL
-  const uploadGroupImage = async (groupId, file) => {
+  const handleFetchGroups = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const storageRef = ref(storage, `groups/${groupId}/photo`);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-      return downloadURL;
+      const groupList = await fetchGroups();
+      setGroups(groupList);
     } catch (error) {
-      console.error("Error uploading group image:", error);
-      throw error;
+      console.error("Error fetching groups:", error);
+      setError("Error fetching groups.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Fetch all groups
-  const fetchGroups = async () => {
-    const groupsSnapshot = await getDocs(collection(db, "Groups"));
-    const groupList = groupsSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setGroups(groupList);
-  };
-
-  //Join group
-  const joinGroup = async (userId, groupId, members) => {
-    if (!userId || !groupId) {
-      console.lerror("Group ID or User ID is missing!");
-      return;
-    }
-
+  const handleFetchGroupsByUser = async (userId) => {
     try {
-      const groupRef = doc(db, "Groups", groupId);
-      console.log("----------" + groupId);
-      await updateDoc(groupRef, {
-        memberId: arrayUnion(userId),
-        members: members + 1,
-      });
-      console.log("User added to the group successfully!");
-    } catch (error) {
-      console.log("Error adding user to group!", error);
-    }
-  };
-
-  const leaveGroup = async (groupId, userId, member) => {
-    if (!groupId || !userId) {
-      console.log("Group ID or User ID is missing.");
-    }
-
-    try {
-      const groupRef = doc(db, "Groups", groupId);
-      const groupSnap = await getDoc(groupRef);
-
-      if (!groupSnap.exists()) {
-        console.log("Group does not exist.");
-      }
-
-      const groupData = groupSnap.data();
-
-      // Remove user ID from the memberId array
-      const updatedMemberId = groupData.memberId.filter((id) => id !== userId);
-
-      // Update the group document
-      await updateDoc(groupRef, {
-        memberId: updatedMemberId,
-        members: updatedMemberId.length,
-      });
-
-      console.log("User successfully removed from the group.");
-    } catch (error) {
-      console.error("Error leaving group:", error);
-    }
-  };
-
-  const fetchGroupsYourMember = async (userId) => {
-    try {
-      const groupRef = collection(db, "Groups");
-      // see  if the userId is in the followersId array
-      const q = query(groupRef, where("memberId", "array-contains", userId));
-      const querySnapshot = await getDocs(q);
-
-      const groups = [];
-      querySnapshot.forEach((doc) => {
-        groups.push({ id: doc.id, ...doc.data() });
-      });
-
-      return groups;
-    } catch (error) {
-      console.error("Error fetching pages:", error);
-      throw error;
-    }
-  };
-
-  //Fetch Groups by user
-  const fetchGroupsByUser = async (userId) => {
-    try {
-      const groupRef = collection(db, "Groups");
-      const q = query(groupRef, where("createdBy", "==", userId));
-      const querySnapshot = await getDocs(q);
-      const groups = [];
-      querySnapshot.forEach((doc) => {
-        groups.push({ id: doc.id, ...doc.data() });
-      });
-      return groups;
+      return await fetchGroupsByUser(userId);
     } catch (error) {
       console.error("Error fetching groups:", error);
       throw error;
     }
   };
 
-  //Fetch Them to display the concrete Group in GroupProfile.
-  const fetchGroupByGroupId = useCallback(async (groupId) => {
+  const handleFetchGroupByGroupId = useCallback(async (groupId) => {
     setLoading(true);
     setError(null);
     try {
-      const groupRef = doc(db, "Groups", groupId);
-      const groupDoc = await getDoc(groupRef);
-      if (groupDoc.exists()) {
-        setGroups(groupDoc.data());
-      } else {
-        setError("Group not found");
-      }
+      const groupData = await fetchGroupById(groupId);
+      // If you want to store just one group, you can do that by setting
+      // `setGroups([groupData])` or storing it in a separate state variable.
+      // Here, we'll replace `groups` state with a single object for simplicity:
+      setGroups(groupData);
     } catch (err) {
       console.error("Error fetching group:", err);
       setError("Error fetching group");
@@ -191,16 +73,69 @@ export const GroupProvider = ({ children }) => {
     }
   }, []);
 
-  // Update a group
-  const updateGroup = async (groupId, updatedGroup) => {
-    const groupRef = doc(db, "Groups", groupId);
-    await updateDoc(groupRef, updatedGroup);
+  const handleJoinGroup = async (userId, groupId, members) => {
+    try {
+      await joinGroup(userId, groupId, members);
+      console.log("User added to the group successfully!");
+    } catch (error) {
+      console.log("Error adding user to group!", error);
+      setError("Error adding user to group.");
+    }
   };
 
-  // Delete a group
-  const deleteGroup = async (groupId) => {
-    const groupRef = doc(db, "Groups", groupId);
-    await deleteDoc(groupRef);
+  const handleLeaveGroup = async (groupId, userId) => {
+    try {
+      await leaveGroup(groupId, userId);
+      console.log("User successfully removed from the group.");
+    } catch (error) {
+      console.error("Error leaving group:", error);
+      setError("Error leaving group.");
+    }
+  };
+
+  const handleFetchGroupsYourMember = async (userId) => {
+    try {
+      return await fetchGroupsYourMember(userId);
+    } catch (error) {
+      console.error("Error fetching groups you're a member of:", error);
+      throw error;
+    }
+  };
+
+  const handleUpdateGroupData = async (groupId, updatedData) => {
+    try {
+      await updateGroupData(groupId, updatedData);
+    } catch (error) {
+      console.error("Error updating group data:", error);
+      setError("Error updating group data.");
+    }
+  };
+
+  const handleUploadGroupImage = async (groupId, file) => {
+    try {
+      return await uploadGroupImage(groupId, file);
+    } catch (error) {
+      console.error("Error uploading group image:", error);
+      setError("Error uploading group image.");
+    }
+  };
+
+  const handleUpdateGroup = async (groupId, updatedGroupData) => {
+    try {
+      await updateGroup(groupId, updatedGroupData);
+    } catch (error) {
+      console.error("Error updating group:", error);
+      setError("Error updating group.");
+    }
+  };
+
+  const handleDeleteGroup = async (groupId) => {
+    try {
+      await deleteGroup(groupId);
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      setError("Error deleting group.");
+    }
   };
 
   return (
@@ -209,17 +144,17 @@ export const GroupProvider = ({ children }) => {
         groups,
         loading,
         error,
-        createGroup,
-        fetchGroups,
-        fetchGroupsByUser,
-        updateGroup,
-        deleteGroup,
-        fetchGroupByGroupId,
-        joinGroup,
-        leaveGroup,
-        fetchGroupsYourMember,
-        updateGroupData,
-        uploadGroupImage,
+        createGroup: handleCreateGroup,
+        fetchGroups: handleFetchGroups,
+        fetchGroupsByUser: handleFetchGroupsByUser,
+        updateGroup: handleUpdateGroup,
+        deleteGroup: handleDeleteGroup,
+        fetchGroupByGroupId: handleFetchGroupByGroupId,
+        joinGroup: handleJoinGroup,
+        leaveGroup: handleLeaveGroup,
+        fetchGroupsYourMember: handleFetchGroupsYourMember,
+        updateGroupData: handleUpdateGroupData,
+        uploadGroupImage: handleUploadGroupImage,
       }}
     >
       {children}

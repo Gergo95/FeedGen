@@ -14,7 +14,7 @@ const AddComment = ({ postId, onAddComment }) => {
 
     try {
       await createCommentToPost(postId, currentUser.uid, commentText);
-      setCommentText(""); // Clear the textarea
+      setCommentText(""); //after we created the comment, we can clear the comment text area
       if (onAddComment) onAddComment();
     } catch (error) {
       console.error("Failed to add comment:", error);

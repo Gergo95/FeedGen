@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { usePosts } from "../../context/PostContext";
 import { useEffect } from "react";
 import "../../styles/components/ListEvents.css";
-import { Link } from "react-router-dom"; // Import Link for navigation
+import { Link } from "react-router-dom";
 
 const ListEvents = () => {
   const { currentUser } = useAuth();
@@ -40,7 +40,7 @@ const ListEvents = () => {
         authorName: currentUser.displayName,
       });
       setNewPost("");
-      loadEventPosts(selectedEvent.id); // Reload posts for the selected event
+      loadEventPosts(selectedEvent.id); //Reload posts for the selected event
     } catch (error) {
       console.error("Error creating post:", error);
     }

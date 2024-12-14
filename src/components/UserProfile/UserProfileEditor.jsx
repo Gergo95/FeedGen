@@ -82,7 +82,7 @@ function UserProfileEditor() {
     job: "",
     school: "",
     relationshipStatus: "",
-    gender: "man", // Default gender
+    gender: "man", //Default gender
   });
 
   const { getUserData, uploadProfileImage, updateUserData } = useUserProf();
@@ -92,7 +92,7 @@ function UserProfileEditor() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState("");
 
-  // Fetch the user data when the component mounts
+  //Fetch the user data when the component mounts
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -119,11 +119,11 @@ function UserProfileEditor() {
       setError("");
       setSuccess("");
       try {
-        // Upload the new profile picture and get the download URL
+        //Upload the new profile picture and get the download URL
         const downloadURL = await uploadProfileImage(uid, file);
         console.log("Uploaded image URL:", downloadURL);
 
-        // Update the profile state with the new photoURL
+        //Update the profile state with the new photoURL
         handleInputChange("photoURL", downloadURL);
 
         setLoading(false);
@@ -166,10 +166,10 @@ function UserProfileEditor() {
     }
 
     try {
-      // Delete from Firebase Authentication
+      //Delete from Firebase Authentication
       await admin.auth().deleteUser(uid);
 
-      // Delete from Firestore Users collection
+      //Delete from Firestore Users collection
       const userRef = db.collection("Users").doc(uid);
       await userRef.delete();
       toast.success("User profile deleted successfully!", {

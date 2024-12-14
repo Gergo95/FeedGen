@@ -25,9 +25,7 @@ export const subscribeToAuthChanges = (callback) => {
   });
 };
 
-/*
- Logs out the currently authenticated user.
- */
+//Logs out the currently authenticated user.
 export const logout = async () => {
   await signOut(auth);
 };

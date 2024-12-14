@@ -7,7 +7,7 @@ const PostFilter = ({ onFilterChange }) => {
   const handleFilterChange = (e) => {
     const selectedFilter = e.target.value;
     setFilter(selectedFilter);
-    onFilterChange(selectedFilter); // Pass the selected filter back to the parent
+    onFilterChange(selectedFilter); //Pass the selected filter back to the parent
   };
 
   return (

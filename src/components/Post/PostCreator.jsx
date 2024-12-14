@@ -1,5 +1,3 @@
-// PostCreator.jsx
-
 import React, { useState } from "react";
 import "../../styles/components/PostCreator.css";
 import { usePosts } from "../../context/PostContext";
@@ -8,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 const PostCreator = ({ contextType, contextId }) => {
   const [postContent, setPostContent] = useState("");
   const [postImage, setPostImage] = useState(null);
-  const { createPost } = usePosts(); // Destructure createPost from usePosts
+  const { createPost } = usePosts();
   const { currentUser } = useAuth();
 
   const handlePostContentChange = (e) => {

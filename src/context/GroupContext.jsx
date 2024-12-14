@@ -61,9 +61,6 @@ export const GroupProvider = ({ children }) => {
     setError(null);
     try {
       const groupData = await fetchGroupById(groupId);
-      // If you want to store just one group, you can do that by setting
-      // `setGroups([groupData])` or storing it in a separate state variable.
-      // Here, we'll replace `groups` state with a single object for simplicity:
       setGroups(groupData);
     } catch (err) {
       console.error("Error fetching group:", err);

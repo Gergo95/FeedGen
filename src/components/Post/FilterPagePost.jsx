@@ -142,7 +142,7 @@ const FilterPagePost = () => {
 
   const handleLikePost = async (postId) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) return; // Ensure the user is logged in
+    if (!userId) return; //Ensure the user is logged in
 
     try {
       const postRef = doc(db, "PagePosts", postId);
@@ -156,14 +156,14 @@ const FilterPagePost = () => {
       const postData = postSnapshot.data();
       let likes = postData.likes;
 
-      // Ensure likes is an array, default to empty array if missing or not an array
+      //Ensure likes is an array, default to empty array if missing or not an array
       if (!Array.isArray(likes)) {
         likes = [];
       }
 
-      // Check if the user has already liked the post
+      //Check if the user has already liked the post
       if (likes.includes(userId)) {
-        // User has already liked the post, so remove the like
+        //User has already liked the post, so remove the like
         await updateDoc(postRef, {
           likes: arrayRemove(userId),
         });
@@ -179,7 +179,7 @@ const FilterPagePost = () => {
           )
         );
       } else {
-        // User hasn't liked the post yet, so add the like
+        //User hasn't liked the post yet, so add the like
         await updateDoc(postRef, {
           likes: arrayUnion(userId),
         });

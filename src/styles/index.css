@@ -52,7 +52,7 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Prevent visited links from changing color */
+/*Prevent visited links from changing color */
 a:visited {
   color: inherit;
 }

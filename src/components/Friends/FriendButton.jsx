@@ -10,7 +10,7 @@ const FriendButton = ({ currentUserUid, profileUserUid }) => {
   useEffect(() => {
     const checkFriendStatus = async () => {
       try {
-        // Check if already friends
+        //Check if already friends
         const friendsRef = collection(db, "Friends");
         const q = query(
           friendsRef,
@@ -24,7 +24,7 @@ const FriendButton = ({ currentUserUid, profileUserUid }) => {
           return;
         }
 
-        // Check if friend request sent
+        //Check if friend request sent
         const friendRequestsRef = collection(db, "FriendRequests");
         const q2 = query(
           friendRequestsRef,

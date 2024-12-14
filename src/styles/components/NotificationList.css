@@ -1,10 +1,8 @@
-/* Notification Container */
 .notification-container {
   position: relative;
   display: inline-block;
 }
 
-/* Notification Icon */
 .notification-icon {
   background: none;
   border: none;
@@ -25,7 +23,6 @@
   transform: translate(50%, -50%);
 }
 
-/* Notification List */
 .notification-list {
   position: absolute;
   top: 40px;
@@ -79,7 +76,6 @@
   font-size: 0.9rem;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .notification-list {
     width: 100%;
@@ -92,7 +88,7 @@
   width: 100%;
   padding: 10px;
   margin-top: 10px;
-  background-color: #28a745; /* Green background */
+  background-color: #28a745;
   color: white;
   border: none;
   border-radius: 5px;
@@ -103,5 +99,5 @@
 }
 
 .view-all-button:hover {
-  background-color: #218838; /* Darker green on hover */
+  background-color: #218838;
 }

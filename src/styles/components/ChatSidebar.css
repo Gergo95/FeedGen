@@ -8,7 +8,6 @@
   overflow-y: auto;
 }
 
-/* Title */
 .chat-sidebar-title {
   font-size: 1.2rem;
   font-weight: bold;
@@ -16,7 +15,6 @@
   margin-bottom: 10px;
 }
 
-/* Chat List */
 .chat-list {
   list-style-type: none;
   padding: 0;

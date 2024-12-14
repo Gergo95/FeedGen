@@ -13,7 +13,7 @@ export const useComments = () => {
 };
 
 export const CommentProvider = ({ children }) => {
-  // comments will be a dictionary { [postId]: Array of comments }
+  //comments will be a dictionary { [postId]: Array of comments }
   const [comments, setComments] = useState({});
 
   const handleFetchCommentsByPostId = async (postId) => {
@@ -37,7 +37,7 @@ export const CommentProvider = ({ children }) => {
         userId,
         content
       );
-      // Add the new comment to the array for that postId
+      //Adding the new comment to the array for that postId
       setComments((prev) => ({
         ...prev,
         [postId]: prev[postId] ? [...prev[postId], newComment] : [newComment],
@@ -56,7 +56,7 @@ export const CommentProvider = ({ children }) => {
         postId,
         updatedContent: newContent,
       } = await serviceUpdateComment(commentId, updatedContent);
-      // Update the comment in the array for that postId
+      //Update the comment in the array for that postId
       setComments((prev) => {
         if (!prev[postId]) return prev;
         const updatedComments = prev[postId].map((comment) =>
@@ -73,7 +73,7 @@ export const CommentProvider = ({ children }) => {
   const handleDeleteComment = async (commentId) => {
     try {
       const { commentId: cId, postId } = await serviceDeleteComment(commentId);
-      // Remove the comment from the array for that postId
+      //Remove the comment from the array for that postId
       setComments((prev) => {
         if (!prev[postId]) return prev;
         const filteredComments = prev[postId].filter(

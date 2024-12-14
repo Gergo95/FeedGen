@@ -57,8 +57,8 @@ const GroupCreator = () => {
         photoURL: profilePicUrl || null,
         createdBy: currentUser.uid,
         createdAt: new Date().toISOString(),
-        memberId: [uid], // Initialize membersId with the current user
-        members: 1, // Set initial members count to 1
+        memberId: [uid], //Initialize membersId with the current user
+        members: 1, //originally there is only one member, the one who created it
       });
 
       toast.success("Group created successfully!", {

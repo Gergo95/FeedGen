@@ -4,15 +4,13 @@ import {
   updateUserData as serviceUpdateUserData,
   uploadProfileImage as serviceUploadProfileImage,
   fetchFriends as serviceFetchFriends,
-} from "../service/UserProfileService"; // Make sure the path is correct
+} from "../service/UserProfileService";
 
 const UserProfContext = createContext();
 
 export const useUserProf = () => useContext(UserProfContext);
 
 const UserProfileProvider = ({ children }) => {
-  // You can add error/loading states if needed, but this example keeps it simple
-
   const handleGetUserData = async (uid) => {
     return await serviceGetUserData(uid);
   };

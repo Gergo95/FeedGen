@@ -77,7 +77,7 @@ export const fetchFriendsPosts = async (currentUserUid) => {
       return [];
     }
 
-    // Handle Firestore limitation of 10 items in 'in' queries
+    //we have to handle the firebasde limitation here
     const chunks = [];
     const chunkSize = 10;
 

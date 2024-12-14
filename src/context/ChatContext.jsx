@@ -6,7 +6,7 @@ export const useChat = () => useContext(ChatContext);
 
 export const ChatProvider = ({ children }) => {
   const [openChats, setOpenChats] = useState([]); // Active chat windows
-  const [activeFriend, setActiveFriend] = useState(null); // Currently chatting friend
+  const [activeFriend, setActiveFriend] = useState(null); // the friend who we are currently chatting withh.
 
   const openChat = (friend) => {
     setActiveFriend(friend);

@@ -1,34 +1,32 @@
 .feed-container {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr;
-  gap: 20px; /* Spacing between columns */
+  gap: 20px;
   padding: 20px;
   max-width: 1600px;
   margin: 0 auto;
 }
 
 .feed-column {
-  background-color: #f9f9f9; /* Light background for each column */
+  background-color: #f9f9f9;
   border-radius: 10px;
   padding: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-  overflow-y: auto; /* Enable scrolling if content overflows */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
 }
 
 .middle-column {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Space between the CreatePost and PostsFeed */
+  gap: 15px;
 }
 
-/* Toggle Container */
 .toggle-container {
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
 }
 
-/* Toggle Buttons */
 .toggle-button {
   background-color: #f0f0f0;
   border: none;
@@ -64,7 +62,7 @@
 
 @media (max-width: 1024px) {
   .feed-container {
-    grid-template-columns: 1fr; /* Stack all columns on smaller screens */
+    grid-template-columns: 1fr;
   }
 
   .feed-column {

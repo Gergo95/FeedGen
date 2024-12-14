@@ -27,7 +27,6 @@ body {
   gap: 20px;
 }
 
-/* Avatar and File Input */
 .photo-upload {
   display: flex;
   justify-content: center;

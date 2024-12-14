@@ -10,7 +10,7 @@ import SearchBar from "./Navbar/SearchBar";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const [activeChatUser, setActiveChatUser] = useState(null); // Active chat user
+  const [activeChatUser, setActiveChatUser] = useState(null);
   const { notifications, markAllAsRead, markAsRead } = useNotifications();
   const unreadCount = notifications.filter((notif) => !notif.read).length;
   const [showDropdown, setShowDropdown] = useState(false);

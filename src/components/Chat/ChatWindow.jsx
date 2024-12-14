@@ -16,7 +16,7 @@ const ChatWindow = ({ friend, currentUser, closeChat }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
-  // Listen for real-time updates
+  //Listen for real-time updates
   useEffect(() => {
     if (!friend || !currentUser) return;
 
@@ -37,7 +37,7 @@ const ChatWindow = ({ friend, currentUser, closeChat }) => {
       setMessages(fetchedMessages);
     });
 
-    // Cleanup listener on unmount or when friend/currentUser changes
+    //Cleanup listener on unmount or when friend/currentUser changes
     return () => unsubscribe();
   }, [friend, currentUser]);
 
@@ -76,7 +76,7 @@ const ChatWindow = ({ friend, currentUser, closeChat }) => {
         {messages.length > 0 ? (
           messages.map((msg) => (
             <Typography
-              key={msg.id} // Use Firestore `id` as unique key
+              key={msg.id} //we are using Firestore `id` as unique key
               align={msg.senderId === currentUser.uid ? "right" : "left"}
               style={
                 msg.senderId === currentUser.uid

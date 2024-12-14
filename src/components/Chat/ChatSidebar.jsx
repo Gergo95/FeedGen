@@ -13,13 +13,13 @@ import { Avatar, List, ListItemText, Badge, ListItem } from "@mui/material";
 
 const ChatSidebar = ({ currentUser, openChat }) => {
   const [friends, setFriends] = useState([]);
-  const dataFetchedRef = useRef(false); // Track fetch status
+  const dataFetchedRef = useRef(false); //Track fetch status
 
   const fetchFriends = useCallback(async (currentUserId) => {
     const friendshipsRef = collection(db, "Friendships");
 
     try {
-      // Fetch friendships where the current user is user1 or user2
+      //Fetch friendships where the current user is user1 or user2, because of the colledction'ss tructure
       const [querySnapshot1, querySnapshot2] = await Promise.all([
         getDocs(query(friendshipsRef, where("user1", "==", currentUserId))),
         getDocs(query(friendshipsRef, where("user2", "==", currentUserId))),
@@ -38,7 +38,7 @@ const ChatSidebar = ({ currentUser, openChat }) => {
       const allFriends = [...friendsFromUser1, ...friendsFromUser2];
       console.log("Combined Friends Data:", allFriends);
 
-      // Fetch full user details
+      //Fetch full user details
       const userPromises = allFriends.map(async (friend) => {
         const userDoc = await getDoc(doc(db, "Users", friend.friendId));
         return { uid: friend.friendId, ...userDoc.data() };
@@ -62,7 +62,7 @@ const ChatSidebar = ({ currentUser, openChat }) => {
         const friendsList = await fetchFriends(currentUser.uid);
         setFriends(friendsList);
         console.log("Fetched friends:", friendsList);
-        dataFetchedRef.current = true; // Mark data as fetched
+        dataFetchedRef.current = true; //we can mark the data as fetcjed after we fetched it
       } catch (error) {
         console.error("Error loading friends:", error);
       }
@@ -82,7 +82,7 @@ const ChatSidebar = ({ currentUser, openChat }) => {
       <List>
         {friends.map((friend) => (
           <ListItem
-            key={friend.uid || Math.random()} // Unique key fallback
+            key={friend.uid || Math.random()} //We need a unique key here as well
             button
             onClick={() => handleFriendClick(friend)}
             style={styles.listItem}

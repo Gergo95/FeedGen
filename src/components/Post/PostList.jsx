@@ -31,7 +31,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  // Helper function to chunk arrays
+  //Helper function to chunk arrays
   const chunkArray = (array, size) => {
     const result = [];
     const arrayCopy = [...array];
@@ -41,12 +41,12 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
     return result;
   };
 
-  // Function to fetch friend IDs
+  //Function to fetch friend IDs
   const getFriendIds = async (uid) => {
     try {
       const friendshipsRef = collection(db, "Friendships");
 
-      // Fetch friendships where currentUserUid is either user1 or user2
+      //Fetch friendships where currentUserUid is either user1 or user2
       const friendshipsQuery1 = query(
         friendshipsRef,
         where("user1", "==", uid)
@@ -63,7 +63,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
 
       const friendIdsSet = new Set();
 
-      // Collect friend UIDs
+      //Collect friend UIDs
       snapshot1.forEach((doc) => {
         const data = doc.data();
         friendIdsSet.add(data.user2);
@@ -73,7 +73,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
         friendIdsSet.add(data.user1);
       });
 
-      // Include current user's UID to display their own posts in feed
+      //Include current user's UID to display their own posts in feed
       friendIdsSet.add(uid);
 
       const friendIds = Array.from(friendIdsSet);
@@ -117,7 +117,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
               const postDoc = change.doc;
               const postData = postDoc.data();
 
-              // Exclude context-specific posts to display general feed
+              //Exclude context-specific posts to display general feed
               if (postData.contextType) continue;
 
               const postId = postDoc.id;
@@ -132,14 +132,14 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
             }
 
             if (postsChanged) {
-              // Fetch unique user IDs from posts
+              //Fetch unique user IDs from posts
               const uniqueUserIds = Array.from(
                 new Set(
                   Array.from(allPostsMap.values()).map((post) => post.uid)
                 )
               );
 
-              // Fetch user data for all unique user IDs
+              //Fetch user data for all unique user IDs
               const userDocs = await Promise.all(
                 uniqueUserIds.map((uid) => getDoc(doc(db, "Users", uid)))
               );
@@ -151,7 +151,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
                 }
               });
 
-              // Attach user data to posts
+              //Attach user data to posts
               const allPostsArray = Array.from(allPostsMap.values()).map(
                 (post) => ({
                   ...post,
@@ -163,7 +163,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
                 })
               );
 
-              // Sort posts by createdAt
+              //Sort posts by createdAt
               allPostsArray.sort(
                 (a, b) =>
                   (b.createdAt?.toMillis() || 0) -
@@ -197,7 +197,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
           for (const docSnapshot of snapshot.docs) {
             const postData = docSnapshot.data();
 
-            // Fetch user data
+            //Fetch user data
             const userDoc = await getDoc(doc(db, "Users", postData.uid));
             const userData = userDoc.exists() ? userDoc.data() : null;
 
@@ -212,7 +212,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
             });
           }
 
-          // Sort posts by createdAt
+          //Sort posts by createdAt
           fetchedPosts.sort(
             (a, b) =>
               (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0)
@@ -242,7 +242,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
           for (const docSnapshot of snapshot.docs) {
             const postData = docSnapshot.data();
 
-            // Fetch user data
+            //Fetch user data
             const userDoc = await getDoc(doc(db, "Users", postData.uid));
             const userData = userDoc.exists() ? userDoc.data() : null;
 
@@ -257,7 +257,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
             });
           }
 
-          // Sort posts by createdAt
+          //Sort posts by createdAt
           fetchedPosts.sort(
             (a, b) =>
               (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0)
@@ -273,7 +273,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
           unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
         };
       } else {
-        // Default behavior: fetch all posts or handle accordingly
+        //Default behavior: fetch all posts or handle accordingly
         console.log("Fetching all posts");
 
         const postsQuery = query(
@@ -287,7 +287,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
           for (const docSnapshot of snapshot.docs) {
             const postData = docSnapshot.data();
 
-            // Fetch user data
+            //Fetch user data
             const userDoc = await getDoc(doc(db, "Users", postData.uid));
             const userData = userDoc.exists() ? userDoc.data() : null;
 
@@ -302,7 +302,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
             });
           }
 
-          // Sort posts by createdAt
+          //Sort posts by createdAt
           fetchedPosts.sort(
             (a, b) =>
               (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0)
@@ -395,7 +395,7 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
   };
 
   const handleLike = async (postId, isLiked) => {
-    if (!currentUser?.uid) return; // Ensure user is logged in
+    if (!currentUser?.uid) return; //making sure the user is logged in
     await toggleLikePost(postId, currentUser.uid, isLiked, "Posts");
   };
 
@@ -527,7 +527,6 @@ const PostList = ({ contextType, contextId, userId, feed }) => {
               </div>
             )}
 
-            {/* Add Comment */}
             <AddComment
               postId={post.id}
               onAddComment={() => handleCommentAdded(post.id)}

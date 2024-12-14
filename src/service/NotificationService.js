@@ -12,11 +12,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 
-/**
- * Fetch a user's data by their UID.
- * @param {string} uid
- * @returns {Promise<Object|null>} User data or null if not found.
- */
+//Fetch a user's data by their UID.
 export const fetchUserData = async (uid) => {
   try {
     const userRef = doc(db, "Users", uid);
@@ -28,10 +24,9 @@ export const fetchUserData = async (uid) => {
   }
 };
 
-/**
- * Fetch notifications for a given user without enriching them with user data.
- * @param {string} userId
- * @returns {Promise<Array>} Array of notification docs data with IDs.
+/*
+ Fetch notifications for a given user without enriching them with user data.
+it returns an Array of notification docs data with IDs.
  */
 export const fetchNotificationsForUser = async (userId) => {
   const notificationsRef = collection(db, "Notifications");
@@ -51,10 +46,10 @@ export const fetchNotificationsForUser = async (userId) => {
   return notifications;
 };
 
-/**
- * Enrich notifications by fetching sender and recipient user data.
- * @param {Array} notifications Array of notifications without enriched data.
- * @returns {Promise<Array>} Enriched notifications with sender/recipient data.
+/*
+ Enrich notifications by fetching sender and recipient user data.
+ param is an Array of notifications without enriched data.
+ returnes the enriched notifications with sender/recipient data.
  */
 export const enrichNotificationsWithUserData = async (notifications) => {
   const enriched = await Promise.all(
@@ -77,11 +72,11 @@ export const enrichNotificationsWithUserData = async (notifications) => {
   return enriched;
 };
 
-/**
- * Subscribe to notifications changes in real-time for a user.
- * This sets up an onSnapshot listener that will call `callback` with the enriched notifications.
- * second parameter is  a callback that receives the updated array of enriched notifications.
- * give back the Unsubscribe function
+/*
+ Subscribe to notifications changes in real-time for a user.
+ This sets up an onSnapshot listener that will call `callback` with the enriched notifications.
+ second parameter is  a callback that receives the updated array of enriched notifications.
+ give back the Unsubscribe function
  */
 export const subscribeToUserNotifications = (userId, callback) => {
   const notificationsRef = collection(db, "Notifications");
@@ -121,7 +116,7 @@ export const markAsRead = async (notificationId) => {
 };
 
 /*
- *  Array of notification IDs to mark as read.
+Array of notification IDs to mark as read.
  */
 export const markAllAsRead = async (notificationIds) => {
   try {
